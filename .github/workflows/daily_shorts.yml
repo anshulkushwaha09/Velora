@@ -58,10 +58,11 @@ jobs:
           echo "GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }}" >> .env
           echo "PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}" >> .env
 
-      # ── Step 7: Restore token.pickle from GitHub Secret ──────────────────────
-      - name: Restore YouTube token
+      # ── Step 7: Restore token.pickle & client_secret.json from Secrets ────────
+      - name: Restore YouTube credentials
         run: |
           echo "${{ secrets.YOUTUBE_TOKEN_B64 }}" | base64 --decode > token.pickle
+          echo "${{ secrets.YOUTUBE_CLIENT_SECRET_B64 }}" | base64 --decode > client_secret.json
 
       # ── Step 8: Run the bot ───────────────────────────────────────────────────
       - name: Generate and upload YouTube Short
