@@ -1,0 +1,78 @@
+name: Thrice-Daily YouTube Shorts
+
+on:
+  schedule:
+    # ── Run 1:  8:00 AM IST = 02:30 UTC  (morning browse) ──
+    - cron: "30 2 * * *"
+    # ── Run 2: 12:00 PM IST = 06:30 UTC  (lunch-time peak) ──
+    - cron: "30 6 * * *"
+    # ── Run 3:  7:00 PM IST = 13:30 UTC  (evening peak) ──
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+    # Also allows manual trigger from GitHub → Actions tab
+
+jobs:
+  generate-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45 # Increased to handle FFmpeg render time
+
+    steps:
+      # ── Step 1: Checkout code ───────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Step 2: Install system dependencies ─────────────────────────────────
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --fix-missing ffmpeg
+
+      # ── Step 3: Set up Python ────────────────────────────────────────────────
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # ── Step 4: Install Python dependencies ──────────────────────────────────
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # ── Step 5: Restore topic history (prevents duplicate shorts) ────────────
+      # topic_history.json remembers the last 30 topics used — cached across runs
+      - name: Restore topic history cache
+        uses: actions/cache@v4
+        with:
+          path: topic_history.json
+          key: topic-history-${{ github.run_id }}
+          restore-keys: |
+            topic-history-
+
+      # ── Step 6: Create .env from GitHub Secrets ──────────────────────────────
+      - name: Write environment variables
+        run: |
+          echo "GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }}" >> .env
+          echo "GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }}" >> .env
+          echo "GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }}" >> .env
+          echo "GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }}" >> .env
+          echo "GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }}" >> .env
+          echo "PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}" >> .env
+
+      # ── Step 7: Restore token.pickle from GitHub Secret ──────────────────────
+      - name: Restore YouTube token
+        run: |
+          echo "${{ secrets.YOUTUBE_TOKEN_B64 }}" | base64 --decode > token.pickle
+
+      # ── Step 8: Run the bot ───────────────────────────────────────────────────
+      - name: Generate and upload YouTube Short
+        run: python main.py
+
+      # ── Step 9: Upload final video as artifact (debugging / archive) ──────────
+      - name: Archive generated video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-short-${{ github.run_id }}
+          path: assets/final/*.mp4
+          retention-days: 7
+          if-no-files-found: warn
