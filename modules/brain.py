@@ -78,51 +78,22 @@ def _call_with_fallback(prompt: str) -> str:
 
 
 class ContentBrain:
-    # Specialized Indian Niche pool
+    # Narrow Focus: Dark Indian History & Mythology
     NICHES = [
-        # Indian Mythology & Creatures
-        "Indian Mythology: Unknown Tales of Shiva & Vishnu",
-        "Mahabharata: Secret Strategies & Warriors",
-        "Ramayana: Lesser Known Facts & Characters",
-        "Indian Mythical Creatures: Garuda, Airavata, and Nagas",
-        "Ancient Temple Mysteries: Kailash, Padmanabhaswamy, and Konark",
-        "Puranic Science: Advanced Concepts in Ancient Texts",
-        "The 10 Avatars of Vishnu: Lessons and Miracles",
-
-        # Personal Finance (India)
-        "Indian Money Hacks: Saving on UPI & Credit Cards",
-        "Tax Savings for Indians: 80C, 80D, and Hidden Benefits",
-        "Stock Market India: Stories of Big Bull & Market Scams",
-        "The Power of Compounding: Real Indian Examples",
-        "Retirement Planning for Middle Class Indians",
-        "Common Financial Scams in India & How to Avoid Them",
-
-        # Business Stories (India)
-        "Indian Startup Success: How Zomato/Swiggy Started",
-        "The Tata Legacy: Stories of Trust and Growth",
-        "Amul: How a Small Cooperative became a Giant",
-        "Reliance & Ambani: The Business Empire Story",
-        "Failed Indian Startups: Lessons from Byju's and others",
-        "The Story of Iconic Indian Brands like Parle-G and Maggi",
-
-        # Health & Ayurveda
-        "Ayurvedic Daily Habits for Long Life",
-        "Indian Superfoods: Benefits of Amla, Turmeric, and Neem",
-        "The Science of Yoga: Simple Asanas for Busy Indians",
-        "Ancient Indian Secrets for Mental Peace & Focus",
-        "Natural Home Remedies (Dadi Maa ke Nuskhe) that Work",
-
-        # "Dark" History & Geopolitics
-        "Untold Stories of the Indian Independence Struggle",
-        "The Mystery of Netaji Subhash Chandra Bose",
-        "India's Geopolitics: The Story of Kashmir and Border Issues",
-        "Ancient Indian Inventions that Changed the World",
-        "Conspiracy Theories: The Death of Lal Bahadur Shastri",
-        "The Lost Saraswati River: Civilizations buried in Time",
+        "Forgotten Secrets of Mahabharata & Ramayana",
+        "Unknown Stories of Shiva, Vishnu & Ancient Gods",
+        "Ancient Temple Mysteries of India",
+        "Lost Civilizations: Saraswati River & Indus Valley",
+        "Puranic Weapons, Strategies & Hidden Meanings",
+        "Mythological Creatures & Their Symbolism",
+        "Unsolved Mysteries of Indian History",
+        "The Untold Truth Behind Indian Freedom Struggle",
+        "Mysteries Around Netaji Subhash Chandra Bose",
+        "Ancient Indian Inventions Ahead of Their Time",
     ]
 
     HISTORY_FILE = "topic_history.json"
-    HISTORY_LIMIT = 30  # Remember last N topics to avoid repeats
+    HISTORY_LIMIT = 100  # Remember last 100 topics (v1 was 30)
 
     def _load_history(self) -> list:
         if os.path.exists(self.HISTORY_FILE):
@@ -201,8 +172,11 @@ class ContentBrain:
     ### 1. SCRIPT REQUIREMENTS (The Voiceover):
     - **Language:** Natural "Hinglish". Use words like "Actually", "Mind-blowing", "Result" within the Hindi flow. 
     - **Tone:** High energy, informal, and relatable. NO formal "Shuddh" Hindi.
+    - **Speed:** Fast-paced.
     - **Perspective:** Strictly **3rd Person**.
     - **Structure:** 8-10 Scenes total.
+    - **VIRAL HOOK (Scene 1):** Use a 'Negative Gap' or 'Curiosity Gap' hook. 
+      *Examples*: "The one secret scholars won't tell you about Mahabharata...", "Why is this 1,000-year-old temple technology still impossible today?", "Actually, most people believe X, but the truth is shocking..."
     - **Flow:** Hook -> Context -> Shocking Fact -> Why it matters -> Outro -> Call to Action.
     - **MANDATORY FINAL SCENE:** Must be a Like & Subscribe request.
 
