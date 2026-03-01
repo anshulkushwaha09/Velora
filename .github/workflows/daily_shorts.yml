@@ -57,6 +57,7 @@ jobs:
           echo "GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }}" >> .env
           echo "GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }}" >> .env
           echo "PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}" >> .env
+          echo "PIXABAY_API_KEY=${{ secrets.PIXABAY_API_KEY }}" >> .env
 
       # ── Step 7: Restore token.pickle & client_secret.json from Secrets ────────
       - name: Restore YouTube credentials
