@@ -174,7 +174,7 @@ class ContentBrain:
     - **Tone:** High energy, informal, and relatable. NO formal "Shuddh" Hindi.
     - **Speed:** Fast-paced.
     - **Perspective:** Strictly **3rd Person**.
-    - **Structure:** 8-10 Scenes total.
+    - **Structure:** 5-7 Scenes total (Keep it strictly between 60-70 seconds total duration).
     - **VIRAL HOOK (Scene 1):** Use a 'Negative Gap' or 'Curiosity Gap' hook. 
       *Examples*: "The one secret scholars won't tell you about Mahabharata...", "Why is this 1,000-year-old temple technology still impossible today?", "Actually, most people believe X, but the truth is shocking..."
     - **Flow:** Hook -> Context -> Shocking Fact -> Why it matters -> Outro -> Call to Action.
