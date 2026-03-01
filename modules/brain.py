@@ -180,10 +180,13 @@ class ContentBrain:
     - **Flow:** Hook -> Context -> Shocking Fact -> Why it matters -> Outro -> Call to Action.
     - **MANDATORY FINAL SCENE:** Must be a Like & Subscribe request.
 
-    ### 2. VISUAL REQUIREMENTS:
+    ### 2. VISUAL REQUIREMENTS (Strictly No Vloggers):
     - For EVERY scene, provide TWO distinct search terms in **English**:
       - **visual_1:** Matches the start.
       - **visual_2:** Matches the end.
+    - **STYLE CONSTRAINT:** Prioritize **Cinematic Landscapes**, **Ancient Architecture**, **Empty Temples**, **Abstract Energy**, or **Stone Textures**.
+    - **EDUCATIONAL STYLE:** Documentary-style footage is OK (e.g., scholars studying, people in traditional prayer, museum artifacts).
+    - **STRICTLY FORBIDDEN:** NO travel vloggers, NO selfies, NO people talking to the camera, NO modern tourists, NO "walking-vlog" shots. The video must feel like a premium documentary, NOT a travel blog.
 
     ### OUTPUT FORMAT (Strict JSON, no markdown, no extra text):
     [
