@@ -71,12 +71,13 @@ class AssetManager:
         except: pass
         return None
 
-    def search_video(self, query, duration_min=4):
+    def search_video(self, query, niche="Ancient India", duration_min=4):
         """
-        Dual-Search Strategy:
+        Dual-Search Strategy with Niche Fallback:
         1. Try Pexels
         2. If fails, try Pixabay
-        3. If fails, try simplified query on Pexels
+        3. If fails, try simplified query (Last word)
+        4. If EVERYTHING fails, fallback to the Niche Name (Safe results)
         """
         print(f"   🔍 Searching for: '{query}'...")
         
@@ -88,13 +89,18 @@ class AssetManager:
         url = self._search_pixabay(query)
         if url: return url
 
-        # Step 3: Simplified search
+        # Step 3: Simplified search (limited to 1 retry)
         if " " in query:
             simple = query.split()[-1]
-            print(f"      ⚠️ No direct results. Trying simple: '{simple}'...")
-            return self.search_video(simple)
+            # If the last word is too generic (secret, mystery), skip to Step 4
+            generic_words = ["secret", "mystery", "history", "actually", "surprising", "fact"]
+            if simple.lower() not in generic_words:
+                print(f"      ⚠️ No direct results. Trying simple: '{simple}'...")
+                return self.search_video(simple, niche=niche)
             
-        return None
+        # Step 4: Final Safe Fallback (The Niche)
+        print(f"      🛡️ All specific searches failed. Using niche fallback: '{niche}'")
+        return self._search_pexels(niche) or self._search_pixabay("ancient architecture")
 
     def download_video(self, url, filename):
         """
@@ -117,7 +123,7 @@ class AssetManager:
             print(f"      ❌ Error downloading {filename}: {e}")
             return None
 
-    def get_videos(self, script_data):
+    def get_videos(self, script_data, niche="Ancient India"):
         """
         NEW LOGIC: Downloads TWO videos per scene (A and B).
         Returns a list of tuples: [(path_a, path_b), (path_a, path_b), ...]
@@ -129,18 +135,17 @@ class AssetManager:
             scene_id = scene['id']
             
             # 1. Get Search Terms
-            # Fallback to 'keywords' if visual_1/2 don't exist (compatibility mode)
-            query_a = scene.get('visual_1', scene.get('keywords', 'abstract'))
-            query_b = scene.get('visual_2', query_a) # Use A if B is missing
+            query_a = scene.get('visual_1', 'ancient india')
+            query_b = scene.get('visual_2', query_a)
             
             # 2. Search & Download Clip A
-            url_a = self.search_video(query_a)
+            url_a = self.search_video(query_a, niche=niche)
             path_a = None
             if url_a:
                 path_a = self.download_video(url_a, f"scene_{scene_id}_a.mp4")
             
             # 3. Search & Download Clip B
-            url_b = self.search_video(query_b)
+            url_b = self.search_video(query_b, niche=niche)
             path_b = None
             if url_b:
                 path_b = self.download_video(url_b, f"scene_{scene_id}_b.mp4")

@@ -53,7 +53,7 @@ async def main(dry_run: bool = False):
     # 1. BRAIN: Get Script
     brain = ContentBrain()
     try:
-        topic = brain.get_trending_topic()
+        topic, niche = brain.get_trending_topic()
         script = brain.generate_script(topic)
     except Exception as e:
         print(f"❌ Brain Error: {e}")
@@ -73,7 +73,7 @@ async def main(dry_run: bool = False):
 
     # 3. ASSETS: Get Stock Video
     asset_manager = AssetManager()
-    assets_map = asset_manager.get_videos(script)
+    assets_map = asset_manager.get_videos(script, niche=niche)
 
     # 4. COMPOSER: Merge Video + Audio
     composer = Composer()

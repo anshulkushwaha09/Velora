@@ -149,7 +149,7 @@ class ContentBrain:
         history.append(topic)
         self._save_history(history)
 
-        return topic
+        return topic, niche
 
     def generate_script(self, topic):
         """
@@ -185,6 +185,7 @@ class ContentBrain:
       - **visual_1:** Matches the start.
       - **visual_2:** Matches the end.
     - **STYLE CONSTRAINT:** Prioritize **Cinematic Landscapes**, **Ancient Architecture**, **Empty Temples**, **Abstract Energy**, or **Stone Textures**.
+    - **KEYWORD RULE:** Every visual query MUST contain at least one concrete noun (e.g., "Temple", "Statue", "Jungle", "Stone"). Never use only abstract words like "Secret" or "History".
     - **EDUCATIONAL STYLE:** Documentary-style footage is OK (e.g., scholars studying, people in traditional prayer, museum artifacts).
     - **STRICTLY FORBIDDEN:** NO travel vloggers, NO selfies, NO people talking to the camera, NO modern tourists, NO "walking-vlog" shots. The video must feel like a premium documentary, NOT a travel blog.
 
