@@ -1,82 +1,246 @@
 import os
-import subprocess
+import re
+import random
 import ffmpeg
-from typing import List, Dict, Optional
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Caption helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Vibrant color palette for the main text — cycles per caption line
+CAPTION_COLORS = [
+    "#FFE500",   # Bright yellow
+    "#00E5FF",   # Electric cyan
+    "#FF6B00",   # Hot orange
+    "#FF2D8B",   # Neon pink
+]
+
+# Number of 3-D depth layers drawn behind the main text
+DEPTH_LAYERS = 5
+
+# Font size (px). At 56px bold, ~30 chars fit within 1080px.
+FONT_SIZE = 56
+
+# Maximum characters per wrapped line. Keep enough margin so long words fit.
+MAX_CHARS_PER_LINE = 24
+
+# Vertical gap between caption lines (pixels)
+LINE_SPACING = 14
+
+
+def _wrap_text(text: str, max_chars: int = MAX_CHARS_PER_LINE) -> list[str]:
+    """
+    Returns a list of strings, each no longer than max_chars.
+    Uses word-boundary wrapping so words are never cut mid-character.
+    """
+    words = text.split()
+    lines, current = [], ""
+    for word in words:
+        if current and len(current) + 1 + len(word) > max_chars:
+            lines.append(current)
+            current = word
+        else:
+            current = (current + " " + word).strip()
+    if current:
+        lines.append(current)
+    return lines
+
+
+def _escape_drawtext(text: str) -> str:
+    """
+    Escapes all characters that FFmpeg drawtext treats specially.
+    NOTE: we do NOT join lines with '\\n' here — each line is a separate
+    drawtext call to avoid ffmpeg-python double-escaping the backslash.
+    """
+    text = text.replace("\\", "\\\\")   # Must be first
+    text = text.replace("'",  "\u2019") # Curly apostrophe — avoids shell quoting issues
+    text = text.replace(":",  "\\:")
+    text = text.replace("%",  "%%")
+    return text
+
 
 class Composer:
     def __init__(self):
-        self.output_dir = os.path.join(os.getcwd(), "assets", "temp")
-        self.final_dir = os.path.join(os.getcwd(), "assets", "final")
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.temp_dir    = os.path.join(os.getcwd(), "assets", "temp")
+        self.final_dir   = os.path.join(os.getcwd(), "assets", "final")
+        self.avatar_path = os.path.join(os.getcwd(), "assets", "avatar", "avatars.mp4")
+        self.font_path   = os.path.join(os.getcwd(), "assets", "fonts", "Montserrat-Bold.ttf")
+
+        os.makedirs(self.temp_dir,  exist_ok=True)
         os.makedirs(self.final_dir, exist_ok=True)
+        self.transitions = ['fade', 'diagbr', 'diagtl']
 
-    def _generate_ass_subtitles(self, text: str, duration: float, output_path: str):
+    # ── internal ──────────────────────────────────────────────────────────────
+
+    def _font_opts(self) -> dict:
+        """Base drawtext options shared by every layer."""
+        opts = {"fontsize": FONT_SIZE}
+        if os.path.exists(self.font_path):
+            opts["fontfile"] = self.font_path.replace("\\", "/")
+        return opts
+
+    def _add_caption(self, video_stream, text: str):
         """
-        Creates an Advanced Substation Alpha (.ass) file for Netflix-style captions.
-        Uses Elite Serif font with Gold/White highlighting.
+        Burns styled, 3-D coloured captions into *video_stream*.
+
+        Strategy:
+          • Split text into lines (one drawtext call per line → no \\n quoting issues).
+          • Per line, draw DEPTH_LAYERS dark-offset copies first (3-D extrusion).
+          • Then draw the coloured main text on top.
+          • Colour cycles through CAPTION_COLORS per line for a vibrant look.
+          • Every layer has a thick black border so text pops on any background.
         """
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        # Elite v9.0 Style: Golden highlight for **POWER WORDS**
-        # Format: {\c&H00FFFF&} for yellow/gold, {\c&HFFFFFF&} for white.
-        # Replacing **word** with {\c&H00FFFF&}WORD{\c&HFFFFFF&}
-        styled_text = text.upper()
-        # Find all power words wrapped in **
-        import re
-        styled_text = re.sub(r'\*\*(.*?)\*\*', r'{\\c&H00FFFF&}\1{\\c&HFFFFFF&}', styled_text)
-        
-        ass_content = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
+        lines = _wrap_text(text, max_chars=MAX_CHARS_PER_LINE)
+        n = len(lines)
+        line_h = FONT_SIZE + LINE_SPACING
 
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Elite,Elite Serif,85,&HFFFFFF,&H000000,&H000000,&H000000,1,0,0,0,100,100,0,0,1,6,0,10,100,100,850,1
+        # Block starts at 72 % of frame height, centred vertically within its block
+        # y_base_expr returns the top Y for line index i
+        def y_expr(i: int) -> str:
+            # total block height = n * line_h
+            # centre of block at h*0.72
+            # top of block = h*0.72 - (n*line_h)/2
+            offset = i * line_h - (n * line_h) // 2
+            sign   = "+" if offset >= 0 else "-"
+            return f"(h*0.72){sign}{abs(offset)}"
 
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,{self._format_duration(duration)},Elite,,0,0,0,,{styled_text}
-"""
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(ass_content)
-        return output_path
+        base = self._font_opts()
 
-    def _format_duration(self, seconds: float) -> str:
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        secs = seconds % 60
-        return f"{hours:01}:{minutes:02}:{secs:05.2f}"
+        for i, line in enumerate(lines):
+            safe = _escape_drawtext(line)
+            color = CAPTION_COLORS[i % len(CAPTION_COLORS)]
+            y     = y_expr(i)
 
-    def process_scene(self, scene: Dict, video_pair: Optional[tuple], is_avatar: bool = False) -> Optional[str]:
-        """
-        Renders a single scene: Audio + Scene A + Scene B + Transition A/B + Subtitles.
-        """
-        scene_id = scene['id']
-        duration = scene['duration']
-        text     = scene['caption_text']
-        
-        output_path = os.path.join(self.output_dir, f"scene_{scene_id}.mp4")
-        ass_path    = os.path.join(self.output_dir, f"scene_{scene_id}.ass")
-        
-        # 1. Generate Subtitles File
-        self._generate_ass_subtitles(text, duration, ass_path)
-        
+            # ── 3-D depth layers (dark, offset diagonally) ────────────────
+            for d in range(DEPTH_LAYERS, 0, -1):
+                video_stream = video_stream.filter(
+                    "drawtext",
+                    **base,
+                    text=safe,
+                    fontcolor="0x1a0a00@0.85",          # Very dark brown, semi-transparent
+                    borderw=3,
+                    bordercolor="black",
+                    x=f"(w-text_w)/2+{d * 2}",          # Shift right
+                    y=f"({y})+{d * 2}",                  # Shift down
+                )
+
+            # ── Main coloured text (top layer) ────────────────────────────
+            video_stream = video_stream.filter(
+                "drawtext",
+                **base,
+                text=safe,
+                fontcolor=color,
+                borderw=4,                               # Thick black outline
+                bordercolor="black",
+                shadowcolor="black@0.6",
+                shadowx=2,
+                shadowy=2,
+                x="(w-text_w)/2",                       # Always centred
+                y=y,
+            )
+
+        return video_stream
+
+    # ── public ────────────────────────────────────────────────────────────────
+
+    def get_duration(self, filepath):
         try:
-            # 2. Setup Video Inputs & Mix (A/B Logic)
+            probe = ffmpeg.probe(filepath)
+            return float(probe['format']['duration'])
+        except:
+            return 0.0
+
+    def _generate_ass_subtitles(self, text: str, duration: float, scene_id: int) -> str:
+        """
+        Generates an Advanced Substation Alpha (.ass) file for 'Elite' style captions.
+        Highlights 'Power Words' in Gold and scales them up 20%.
+        """
+        ass_path = os.path.join(self.temp_dir, f"scene_{scene_id}.ass")
+        # Elite v8.0 Power Words
+        power_words = ["SHIVA", "SECRET", "ANCIENT", "POWER", "MYSTERY", "TRUTH", "DYNASTY", "GOD", "MAHADEV", "SHAKTI", "RAHASYA", "SATYA"]
+        
+        # ── ASS HEADER ──────────────────────────────────────────────────────
+        header = [
+            "[Script Info]",
+            "ScriptType: v4.00+",
+            "PlayResX: 1080",
+            "PlayResY: 1920",
+            "ScaledBorderAndShadow: yes",
+            "",
+            "[V4+ Styles]",
+            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+            "Style: Elite,EliteSerif,64,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,3,2,2,50,50,480,1",
+            "",
+            "[Events]",
+            "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
+        ]
+
+        # ── PROCESS WORDS ────────────────────────────────────────────────────
+        # Regex to find **text** and replace with ASS styling
+        # Includes support for punctuation attached to the stars
+        import re
+        def _apply_style(match):
+            word = match.group(1)
+            # \c&H00D7FF& (Gold in BGR), \fscx120\fscy120 (+20% scale)
+            return f"{{\\c&H00D7FF&\\fscx120\\fscy120}}{word}{{\\r}}"
+
+        styled_text = re.sub(r"\*\*(.*?)\*\*", _apply_style, text)
+        
+        # ── WRAPPING ─────────────────────────────────────────────────────────
+        # In ASS, \N is a forced line break. I'll split into 24-char lines.
+        lines = _wrap_text(styled_text, max_chars=28)
+        ass_text = "\\N".join(lines)
+
+        # ── ADD EVENT ────────────────────────────────────────────────────────
+        # 0.5s padding to match video trim
+        end_time = duration + 0.5
+        def fmt_time(t):
+            h = int(t // 3600)
+            m = int((t % 3600) // 60)
+            s = t % 60
+            return f"{h}:{m:02d}:{s:05.2f}"
+
+        header.append(f"Dialogue: 0,0:00:00.00,{fmt_time(end_time)},Elite,,0,0,0,,{ass_text}")
+
+        with open(ass_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(header))
+        
+        return ass_path
+
+    def process_scene(self, scene, video_pair, is_avatar=False):
+        """
+        Combines Audio + Visuals + Caption for one scene.
+        """
+        import re
+        scene_id       = scene['id']
+        audio_path     = scene['audio_path']
+        total_duration = scene['duration']
+        caption_text   = scene.get('caption_text', scene.get('text', ''))
+        output_path    = os.path.join(self.temp_dir, f"scene_{scene_id}.mp4")
+
+        try:
+            input_audio = ffmpeg.input(audio_path)
+
             if is_avatar:
+                # ── AVATAR MODE ────────────────────────────────────────────
+                print(f"   ⚙️ Processing Scene {scene_id}: 🤖 Avatar Mode (Cropped)")
                 video_stream = (
                     ffmpeg.input(video_pair[0], stream_loop=-1)
-                    .trim(duration=duration).setpts('PTS-STARTPTS')
-                    .filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
+                    .trim(duration=total_duration + 0.5)
+                    .setpts('PTS-STARTPTS')
+                    .filter('crop', 'iw', 'ih-150', 0, 0)
+                    .filter('scale', 1080, 1920, force_original_aspect_ratio='increase')
+                    .filter('crop', 1080, 1920)
                     .filter('fps', fps=30, round='up')
                 )
-            elif video_pair:
+            else:
+                # ── STABLE A/B SPLIT (Switch halfway through) ──────────────
+                print(f"   ⚙️ Processing Scene {scene_id}: 🎞️ A/B Split Mode")
                 path_a, path_b = video_pair
-                duration_a = duration * 0.7
-                duration_b = duration * 0.5 # Slight overlap
-                
+                duration_a = total_duration / 2
+                duration_b = (total_duration / 2) + 0.5
+
                 stream_a = (
                     ffmpeg.input(path_a, stream_loop=-1)
                     .trim(duration=duration_a).setpts('PTS-STARTPTS')
@@ -89,102 +253,93 @@ Dialogue: 0,0:00:00.00,{self._format_duration(duration)},Elite,,0,0,0,,{styled_t
                     .filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
                     .filter('fps', fps=30, round='up')
                 )
-                
-                # Crossfade A -> B at 70% mark
-                offset = duration_a - 0.5
-                video_stream = ffmpeg.filter([stream_a, stream_b], 'xfade', transition='fade', duration=0.5, offset=offset)
-            else:
-                return None
+                video_stream = ffmpeg.concat(stream_a, stream_b, v=1, a=0)
 
-            # 3. Add Subtitles (Relative path for Windows safety)
-            rel_ass_path = os.path.relpath(ass_path, os.getcwd()).replace("\\", "/")
-            video_stream = video_stream.filter('subtitles', rel_ass_path, fontsdir="assets/fonts")
+            # ── Burn Elite Subtitles (ASS) ──────────────────────────────────
+            if caption_text:
+                ass_path = self._generate_ass_subtitles(caption_text, total_duration, scene_id)
+                # Use relative path to avoid Windows drive 'C:' colon nightmare in FFmpeg filters
+                rel_ass_path = os.path.relpath(ass_path, os.getcwd()).replace("\\", "/")
+                video_stream = video_stream.filter('subtitles', rel_ass_path, fontsdir="assets/fonts")
 
-            # 4. Attach Audio
-            input_audio = ffmpeg.input(scene['audio_path'])
-            
-            # 5. Output Render
+            # ── Encode ────────────────────────────────────────────────────
             runner = ffmpeg.output(
                 video_stream, input_audio, output_path,
                 vcodec='libx264', acodec='aac', pix_fmt='yuv420p', shortest=None
             )
             runner.run(overwrite_output=True, quiet=True)
-            
-            # Post-render validation
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-                return output_path
-            else:
-                print(f"   ⚠️ Render Result: File missing or empty for Scene {scene_id}")
-                return None
+            return output_path
 
         except ffmpeg.Error as e:
             print(f"❌ Render Fail Scene {scene_id}: {e.stderr.decode('utf8') if e.stderr else str(e)}")
             return None
 
-    def render_all_scenes(self, script_data: List[Dict], assets_map: Dict, is_avatar: bool = False) -> List[str]:
-        print(f"🎬 Starting Scene Rendering for {len(script_data)} scenes...")
+    def render_all_scenes(self, script_data, video_pairs):
         rendered_paths = []
-        
+        avatar_indices = []
+
+        # Disabled for Elite v5.1 (Male voice mismatch with female avatar)
+        avatar_indices = []
+
         for i, scene in enumerate(script_data):
-            scene_id = scene['id']
-            current_pair = assets_map.get(scene_id)
-            
-            if current_pair is None and not is_avatar:
-                print(f"   ⚠️ Skipping Scene {scene_id}: No visuals found.")
+            current_pair = video_pairs[i]
+            is_avatar    = False
+
+            if i in avatar_indices:
+                current_pair = (self.avatar_path, None)
+                is_avatar    = True
+            elif current_pair is None:
                 continue
-                
+
             output_path = self.process_scene(scene, current_pair, is_avatar)
             if output_path:
                 rendered_paths.append(output_path)
-                print(f"   ✅ Rendered Scene {scene_id}.")
-        
+
         return rendered_paths
 
-    def concatenate_with_transitions(self, video_paths: List[str], output_filename: str = "final_short.mp4"):
-        """
-        Joins all scenes with a crossfade transition into a single vertical video.
-        """
+    def concatenate_with_transitions(self, video_paths, output_filename="final_short.mp4"):
+        print("🎬 Stitching final video...")
+        output_path = os.path.join(self.final_dir, output_filename)
+
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+            except:
+                print("⚠️ Could not delete old file — it may be open in a player.")
+
         if not video_paths:
             return None
-            
-        print(f"🧵 Stitching {len(video_paths)} scenes together...")
-        output_path = os.path.join(self.final_dir, output_filename)
-        
-        try:
-            # First clip
-            input1 = ffmpeg.input(video_paths[0])
-            v_stream = input1.video
-            a_stream = input1.audio
-            cumulative_offset = 0
-            
-            # Iterate and cross-fade each subsequent clip
-            for i in range(1, len(video_paths)):
-                # Get duration of cumulative stream so far
-                try:
-                    probe = ffmpeg.probe(video_paths[0] if i==1 else "assets/temp/temp_stitch.mp4")
-                    # This logic is complex for raw ffmpeg-python without temp files.
-                    # Simplified: using basic concat for the Elite standard.
-                    pass
-                except:
-                    pass
 
-            # Elite Standard: Linear Concatenation with Overlap transitions
-            # For simplicity and speed in v2.0, we use a complex concat filter
-            
-            inputs = [ffmpeg.input(p) for p in video_paths]
-            v_streams = [i.video for i in inputs]
-            a_streams = [i.audio for i in inputs]
-            
-            # Complex Concat Filter
-            joined = ffmpeg.concat(*[s for pair in zip(v_streams, a_streams) for s in pair], v=1, a=1).node
-            v_stream = joined[0]
-            a_stream = joined[1]
-            
+        input1      = ffmpeg.input(video_paths[0])
+        v_stream    = input1.video
+        a_stream    = input1.audio
+        current_dur = self.get_duration(video_paths[0])
+
+        for i in range(1, len(video_paths)):
+            next_clip = ffmpeg.input(video_paths[i])
+            next_dur  = self.get_duration(video_paths[i])
+            trans_dur = 0.5
+            offset    = current_dur - trans_dur
+            effect    = random.choice(self.transitions)
+            print(f"   ✨ Transition {i}: '{effect}' at {offset:.2f}s")
+
+            v_stream = ffmpeg.filter(
+                [v_stream, next_clip.video], 'xfade',
+                transition=effect, duration=trans_dur, offset=offset
+            )
+            a_stream = ffmpeg.filter(
+                [a_stream, next_clip.audio], 'acrossfade', d=trans_dur
+            )
+            current_dur = (current_dur + next_dur) - trans_dur
+
+        try:
             runner = ffmpeg.output(
                 v_stream, a_stream, output_path,
-                vcodec='libx264', acodec='aac', pix_fmt='yuv420p'
+                vcodec='libx264', acodec='aac',
+                pix_fmt='yuv420p', movflags='faststart', preset='medium'
             )
-            runner.run(overwrite_output=True, quiet=True)
+            runner.run(overwrite_output=True, quiet=False)
+            print(f"✅ FINAL VIDEO SAVED: {output_path}")
             return output_path
 
         except ffmpeg.Error as e:

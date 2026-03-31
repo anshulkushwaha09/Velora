@@ -1,83 +1,139 @@
-import os
-import argparse
 import asyncio
+import argparse
+import os
 import shutil
+import json
+from dotenv import load_dotenv
 from modules.brain import ContentBrain
-from modules.audio import AudioEngine
 from modules.asset_manager import AssetManager
+from modules.audio import AudioEngine
 from modules.composer import Composer
 
+# Load .env on startup
+load_dotenv()
+
+
 def clean_cache():
+    """
+    Safely deletes temporary files.
+    Includes a Safety Lock to prevent deleting anything outside the project.
+    """
     print("🧹 Cleaning up temporary files...")
+    
     folders_to_clean = [
         os.path.join(os.getcwd(), "assets", "audio_clips"),
         os.path.join(os.getcwd(), "assets", "video_clips"),
         os.path.join(os.getcwd(), "assets", "temp")
     ]
+
     for folder in folders_to_clean:
-        if os.path.exists(folder):
-            shutil.rmtree(folder)
-            os.makedirs(folder, exist_ok=True)
+        if not os.path.exists(folder):
+            continue
+        if "assets" not in folder:
+            print(f"   🚨 SECURITY ALERT: Skipping {folder} because it looks unsafe!")
+            continue
+
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print(f"   ❌ Failed to delete {file_path}. Reason: {e}")
+    
     print("✨ Workspace clean!")
 
-async def main():
-    parser = argparse.ArgumentParser(description="Velora Elite v9.0 Shorts Automation")
-    parser.add_argument("--dry-run", action="store_true", help="Run without uploading to YouTube")
-    parser.add_argument("--topic", type=str, help="Manually specify a topic")
-    args = parser.parse_args()
 
+async def main(dry_run: bool = False):
     print("🚀 STARTING AUTOMATION...")
-    if args.dry_run:
+    if dry_run:
         print("🧪 DRY-RUN MODE — video will be saved locally, not uploaded.")
 
-    # 1. BRAIN: Generate Topic & Script
+    # 1. BRAIN: Get Script
     brain = ContentBrain()
-    
-    if args.topic:
-        topic, niche = args.topic, "Manual"
+    script = None
+    if os.path.exists("script.json"):
+        print("📂 Loading existing script.json...")
+        with open("script.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict) and "script" in data:
+                script = data["script"]
+                topic = data.get("topic", "Elite Mystery")
+            else:
+                script = data
+                topic = "Elite Mystery"
     else:
-        topic, niche = brain.get_trending_topic()
-        
-    script = brain.generate_script(topic)
+        try:
+            topic, niche = brain.get_trending_topic()
+            script = brain.generate_script(topic)
+            # Save script to temp for inspection (NOT root)
+            script_path = os.path.join(os.getcwd(), "assets", "temp", "script.json")
+            os.makedirs(os.path.dirname(script_path), exist_ok=True)
+            with open(script_path, "w", encoding="utf-8") as f:
+                json.dump({"topic": topic, "script": script}, f, indent=4, ensure_ascii=False)
+                print(f"💾 Script saved to {script_path} for verification.")
+        except Exception as e:
+            print(f"❌ Brain Error: {e}")
+            return
+
     if not script:
-        print("❌ Script generation failed. Terminating.")
+        print("❌ Script generation failed.")
         return
 
-    # 2. AUDIO: Generate Voiceover
+    # 2. AUDIO: Generate Voice
     audio_engine = AudioEngine()
-    script_with_audio = await audio_engine.process_script(script)
+    try:
+        script = await audio_engine.process_script(script)
+    except Exception as e:
+        print(f"❌ Audio Error: {e}")
+        return
 
-    # 3. ASSETS: Gather Video Clips
+    # 3. ASSETS: Get Stock Video
     asset_manager = AssetManager()
-    assets_map = asset_manager.get_videos(script_with_audio)
+    assets_map = asset_manager.get_videos(script)
 
-    # 4. COMPOSER: Render All Scenes
+    # 4. COMPOSER: Merge Video + Audio
     composer = Composer()
-    final_scene_paths = composer.render_all_scenes(script_with_audio, assets_map)
+    final_scene_paths = composer.render_all_scenes(script, assets_map)
 
-    # 5. STITCH: Final Video
+    # 5. STITCH WITH TRANSITIONS
+    final_video_path = None
     if final_scene_paths:
         final_video_path = composer.concatenate_with_transitions(final_scene_paths)
-        
-        if final_video_path:
-            print(f"✅ FINAL VIDEO SAVED: {final_video_path}")
-            if not args.dry_run:
-                # 6. UPLOADER (Future implementation)
-                print("📤 Uploading to YouTube... (TBD)")
-            else:
-                print("✅ DRY RUN COMPLETE!")
-            
-            # 7. CLEANUP (Only on success)
-            clean_cache()
-        else:
-            print("❌ Stitching failed. Temporary files preserved for debugging.")
+        clean_cache()
     else:
-        print("❌ No scenes rendered. Terminating.")
+        print("❌ Failed to generate any scenes.")
+        return
+
+    if not final_video_path:
+        print("❌ Final video creation failed.")
+        return
+
+    # 6. UPLOAD TO YOUTUBE (skipped in dry-run mode)
+    if dry_run:
+        print(f"\n✅ DRY RUN COMPLETE!")
+        print(f"   Video saved at: {final_video_path}")
+        print("   Upload step SKIPPED (dry-run mode).")
+    else:
+        try:
+            from modules.youtube_uploader import upload_video
+            video_title       = f"Did You Know? | {topic[:60]} #Shorts"
+            video_description = brain.generate_description(topic, script)
+            upload_video(final_video_path, title=video_title, description=video_description)
+        except Exception as e:
+            print(f"❌ YouTube Upload Error: {e}")
+            print(f"   The video was still saved at: {final_video_path}")
+
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n👋 Automation stopped by user.")
-    except Exception as e:
-        print(f"\n❌ CRITICAL ERROR: {e}")
+    parser = argparse.ArgumentParser(description="AI YouTube Shorts Generator")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Generate the video locally without uploading to YouTube."
+    )
+    args = parser.parse_args()
+
+    asyncio.run(main(dry_run=args.dry_run))

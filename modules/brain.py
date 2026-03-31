@@ -200,7 +200,7 @@ class ContentBrain:
 
     def generate_script(self, topic):
         """
-        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (v9.0).
+        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (Elite v9.0).
         Enforces: 28–34s total, 12–14 scenes, phonetic Hinglish, realistic stock keywords.
         """
         print(f"📝 Writing ELITE MASTER script for: {topic}...")
@@ -211,87 +211,116 @@ Topic: {topic}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📊 CORE OBJECTIVE:
-Create a HIGH-RETENTION YouTube Short (28–34 seconds) that prevents viewer drop.
+Create a HIGH-RETENTION YouTube Short (28–34 seconds) that prevents viewer drop in first 8 seconds.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📏 STRICT TIMING RULES:
 - Total Duration: 28–34 seconds ONLY
-- Total Scenes: 12 ONLY
+- Total Scenes: 12–14
 - Each Scene: 2–2.5 seconds
-- Each voiceover: MAX 6 WORDS (natural flow, NOT robotic).
-⚠️ IMPORTANT: 9 words takes too long (4+ seconds). Keep it to 5-6 words.
+- Each voiceover: 6–9 words (natural flow, NOT robotic)
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🧠 RETENTION STRUCTURE (follow EXACTLY):
-1. Scene 1  → SHOCK CLAIM (no intro, no question)
-2. Scene 2  → INSTANT PROOF (visual confirmation)
-3. Scenes 3–4  → FAST FACTS
-4. Scenes 5–8  → ESCALATION (bigger reveal)
-5. Scenes 9–10 → TWIST / NEW INFO
-6. Scenes 11–12 → LOOP BACK (connect to hook)
+1. Scene 1 → SHOCK CLAIM (no intro, no question)
+2. Scene 2 → INSTANT PROOF (visual confirmation)
+3. Scene 3–5 → FAST FACTS
+4. Scene 6–9 → ESCALATION (bigger reveal)
+5. Scene 10–12 → TWIST / NEW INFO
+6. Scene 13–14 → LOOP BACK (connect to hook)
 
 ⚠️ CRITICAL RULES:
 - Proof MUST appear in Scene 2
-- NO slow explanation anywhere
+- NO slow explanation
 - EVERY scene must increase curiosity
 - Maintain CONTINUOUS STORY FLOW between scenes
-- Rapid-fire delivery: One key fact per scene.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🎬 STOCK VISUAL RULES:
-Use ONLY searchable realistic stock footage keywords (Pexels / Pixabay style).
+Use ONLY realistic stock footage from:
+- Pexels
+- Pixabay
 
-✅ GOOD keyword examples:
-- "cave tunnel dark", "ancient temple india", "stone ruins aerial"
-- "scientist lab", "radar screen", "fog forest", "shadow hallway"
-- "drone ruins", "mountain aerial", "close up stone carving"
-
-❌ BAD keywords (too complex, unsearchable):
-- "ancient underground temple scan", "god awakening light beam"
-
-Each scene MUST have:
-- visual_search_1: simple 2–3 word stock keyword (primary)
-- visual_search_2: different backup 2–3 word stock keyword
-⚠️ DO NOT repeat the same visual keywords across scenes.
+✅ Use ONLY searchable realistic visuals:
+Examples:
+- temple → "temple drone", "ancient temple india"
+- underground → "cave tunnel", "dark corridor"
+- discovery → "scientist lab", "radar screen"
+- mystery → "fog forest", "shadow hallway"
+- scale → "aerial ruins", "mountain drone"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🎭 LANGUAGE RULES:
+🔍 VISUAL SEARCH RULE:
+Each scene MUST include:
+- "visual_search_1": simple stock keyword
+- "visual_search_2": backup keyword
+
+⚠️ Keywords MUST be:
+- realistic
+- searchable
+- NOT complex phrases
+
+❌ BAD: "ancient underground temple scan"
+✅ GOOD: "cave tunnel dark", "stone ruins aerial"
+
+⚠️ DO NOT repeat same visuals across scenes
+
+━━━━━━━━━━━━━━━━━━━━━━
+⚡ PATTERN INTERRUPT RULE:
+Every 3 scenes MUST introduce:
+- a twist OR
+- a shocking fact OR
+- a new reveal
+
+━━━━━━━━━━━━━━━━━━━━━━
+🎭 LANGUAGE & FLOW RULES:
 - Voiceover: Hinglish (Roman Hindi + English mix)
-- MUST sound natural when spoken aloud
-- Maintain story continuity between scenes
+- MUST sound natural when spoken
+- Maintain CONTINUITY between scenes
 
-Use connecting phrases naturally:
-- "aur phir", "lekin yeh to bas shuruaat thi", "sabse shocking baat yeh hai"
-
-━━━━━━━━━━━━━━━━━━━━━━
-🔊 PRONUNCIATION CONTROL (CRITICAL):
-Write Hinglish PHONETICALLY as it is clearly spoken:
-✅ "shehar" not "sehar"
-✅ "hairaan" not "hern"
-✅ "zameen" not "zamin"
-✅ "badal" not "baadaal"
-⚠️ Avoid difficult Sanskrit-heavy or regional words.
+Use connecting phrases when needed:
+- "aur phir"
+- "lekin yeh to bas shuruaat thi"
+- "sabse shocking baat yeh hai"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🚫 STRICT DON'TS:
-- NO questions at scene start
-- NO slow buildup
-- NO repetition of visuals or facts
-- NO generic filler words like "mystery", "secret", "ancient" in voiceover
-- Be SPECIFIC and VISUAL in every line
+🔊 PRONUNCIATION CONTROL (VERY IMPORTANT):
+Write Hinglish PHONETICALLY (as spoken clearly)
+Examples:
+- "shehar" (not sehar)
+- "hairaan" (not hern)
+- "badal" (not baadaal)
+- "zameen" (not zamin)
+
+⚠️ Avoid difficult or Sanskrit-heavy words
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📦 OUTPUT FORMAT (STRICT JSON — return ONLY this, no extra text):
+🚫 STRICT DON'Ts:
+- No questions at start
+- No slow buildup
+- No repetition
+- No generic words like: mystery, secret, ancient
+- Be SPECIFIC and VISUAL
+
+━━━━━━━━━━━━━━━━━━━━━━
+📦 OUTPUT FORMAT (STRICT JSON — return ONLY this):
 [
   {{
     "id": 1,
-    "voiceover_text": "6–9 words Hinglish phonetic natural flow",
+    "voiceover_text": "6–9 words Hinglish (phonetic, natural flow)",
     "caption_text": "2–4 WORDS WITH **HIGHLIGHT**",
     "visual_search_1": "simple stock keyword",
-    "visual_search_2": "backup stock keyword",
+    "visual_search_2": "backup keyword",
     "visual_style": "drone / zoom / dark / cinematic"
   }}
 ]
+
+STYLE GUIDELINES
+- Write like a STORY, not a list of facts
+- Each line must connect logically to the next
+- Avoid repetition
+- Avoid generic lines
+- Avoid over-explaining
 
 Return ONLY the JSON array. No explanation. No preamble. No markdown block.
 """
