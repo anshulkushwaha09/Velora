@@ -211,23 +211,23 @@ Topic: {topic}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📊 CORE OBJECTIVE:
-Create a HIGH-RETENTION YouTube Short (28–34 seconds) that prevents viewer drop in first 8 seconds.
+Create a HIGH-RETENTION YouTube Short (30–40 seconds) that prevents viewer drop in first 8 seconds.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📏 STRICT TIMING RULES:
-- Total Duration: 28–34 seconds ONLY
-- Total Scenes: 12–14
-- Each Scene: 2–2.5 seconds
-- Each voiceover: 6–9 words (natural flow, NOT robotic)
+- Total Duration: 30–40 seconds ONLY
+- Total Scenes: 11 ONLY
+- Each Scene: 3–3.5 seconds
+- Each voiceover: 6–8 words (natural flow, NOT robotic)
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🧠 RETENTION STRUCTURE (follow EXACTLY):
-1. Scene 1 → SHOCK CLAIM (no intro, no question)
-2. Scene 2 → INSTANT PROOF (visual confirmation)
-3. Scene 3–5 → FAST FACTS
-4. Scene 6–9 → ESCALATION (bigger reveal)
-5. Scene 10–12 → TWIST / NEW INFO
-6. Scene 13–14 → LOOP BACK (connect to hook)
+1. Scene 1 → SHOCK CLAIM
+2. Scene 2 → INSTANT PROOF
+3. Scene 3–4 → FAST FACTS
+4. Scene 5–7 → ESCALATION
+5. Scene 8–9 → TWIST / NEW INFO
+6. Scene 10–11 → LOOP BACK
 
 ⚠️ CRITICAL RULES:
 - Proof MUST appear in Scene 2
@@ -307,7 +307,7 @@ Examples:
 [
   {{
     "id": 1,
-    "voiceover_text": "6–9 words Hinglish (phonetic, natural flow)",
+    "voiceover_text": "6–8 words Hinglish (phonetic, natural flow)",
     "caption_text": "2–4 WORDS WITH **HIGHLIGHT**",
     "visual_search_1": "simple stock keyword",
     "visual_search_2": "backup keyword",

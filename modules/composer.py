@@ -213,13 +213,18 @@ class Composer:
         Combines Audio + Visuals + Caption for one scene.
         """
         import re
-        scene_id       = scene['id']
-        audio_path     = scene['audio_path']
-        total_duration = scene['duration']
+        scene_id       = scene.get('id', 'Unknown')
+        audio_path     = scene.get('audio_path', '')
+        total_duration = scene.get('duration', 0)
         caption_text   = scene.get('caption_text', scene.get('text', ''))
         output_path    = os.path.join(self.temp_dir, f"scene_{scene_id}.mp4")
 
         try:
+            # ── Audio Validation ─────────────────────────────────────────────
+            if not audio_path or not os.path.exists(audio_path):
+                print(f"   ❌ Scene {scene_id}: Audio file missing or invalid path.")
+                return None
+
             input_audio = ffmpeg.input(audio_path)
 
             if is_avatar:

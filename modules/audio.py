@@ -26,8 +26,8 @@ class AudioEngine:
 
         for attempt in range(retries):
             try:
-                # Elite Master Sync: Pitch -5Hz, Rate +22% (Authoritative & Snappy)
-                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+22%", pitch="-5Hz")
+                # Elite Master Sync: Pitch -5Hz, Rate +26% (Authoritative & Snappy)
+                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+26%", pitch="-5Hz")
                 await communicate.save(output_path)
                 return output_path
             
@@ -48,11 +48,17 @@ class AudioEngine:
 
     async def process_script(self, script_data):
         print(f"🎙️ Starting Audio Generation for {len(script_data)} scenes...")
+        processed_scenes = []
         
         for scene in script_data:
             scene_id = scene['id']
             text = scene.get('voiceover_text', scene.get('text', ''))
             filename = f"voice_{scene_id}.mp3"
+            
+            # ── CLEAR STALE DATA ─────────────────────────────────────────────
+            # Ensures if generation fails, we don't use old/invalid paths
+            scene.pop('audio_path', None)
+            scene.pop('duration', None)
             
             try:
                 # Generate Audio
@@ -61,11 +67,14 @@ class AudioEngine:
                 # Get Duration
                 duration = self.get_audio_duration(file_path)
                 
-                # Update Scene Data
-                scene['audio_path'] = file_path
-                scene['duration'] = duration
-                
-                print(f"   ✅ Scene {scene_id}: {duration:.2f}s generated.")
+                if duration > 0:
+                    # Update Scene Data
+                    scene['audio_path'] = file_path
+                    scene['duration'] = duration
+                    processed_scenes.append(scene)
+                    print(f"   ✅ Scene {scene_id}: {duration:.2f}s generated.")
+                else:
+                    print(f"   ⚠️ Scene {scene_id}: Audio generated but zero duration. Skipping.")
                 
                 # CRITICAL: Sleep for 1 second to be polite to the API
                 # This prevents the "Connection Timeout" error
@@ -75,4 +84,4 @@ class AudioEngine:
                 print(f"   ❌ Skipping Scene {scene_id} due to audio error.")
                 continue
             
-        return script_data
+        return processed_scenes
