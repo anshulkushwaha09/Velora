@@ -50,7 +50,7 @@ def _wrap_text(text: str, max_chars: int = MAX_CHARS_PER_LINE) -> list[str]:
 def _escape_drawtext(text: str) -> str:
     """
     Escapes all characters that FFmpeg drawtext treats specially.
-    NOTE: we do NOT join lines with '\\n' here — each line is a separate
+    NOTE: we do NOT join lines with '\n' here — each line is a separate
     drawtext call to avoid ffmpeg-python double-escaping the backslash.
     """
     text = text.replace("\\", "\\\\")   # Must be first
@@ -83,24 +83,12 @@ class Composer:
     def _add_caption(self, video_stream, text: str):
         """
         Burns styled, 3-D coloured captions into *video_stream*.
-
-        Strategy:
-          • Split text into lines (one drawtext call per line → no \\n quoting issues).
-          • Per line, draw DEPTH_LAYERS dark-offset copies first (3-D extrusion).
-          • Then draw the coloured main text on top.
-          • Colour cycles through CAPTION_COLORS per line for a vibrant look.
-          • Every layer has a thick black border so text pops on any background.
         """
         lines = _wrap_text(text, max_chars=MAX_CHARS_PER_LINE)
         n = len(lines)
         line_h = FONT_SIZE + LINE_SPACING
 
-        # Block starts at 72 % of frame height, centred vertically within its block
-        # y_base_expr returns the top Y for line index i
         def y_expr(i: int) -> str:
-            # total block height = n * line_h
-            # centre of block at h*0.72
-            # top of block = h*0.72 - (n*line_h)/2
             offset = i * line_h - (n * line_h) // 2
             sign   = "+" if offset >= 0 else "-"
             return f"(h*0.72){sign}{abs(offset)}"
@@ -112,31 +100,29 @@ class Composer:
             color = CAPTION_COLORS[i % len(CAPTION_COLORS)]
             y     = y_expr(i)
 
-            # ── 3-D depth layers (dark, offset diagonally) ────────────────
             for d in range(DEPTH_LAYERS, 0, -1):
                 video_stream = video_stream.filter(
                     "drawtext",
                     **base,
                     text=safe,
-                    fontcolor="0x1a0a00@0.85",          # Very dark brown, semi-transparent
+                    fontcolor="0x1a0a00@0.85",
                     borderw=3,
                     bordercolor="black",
-                    x=f"(w-text_w)/2+{d * 2}",          # Shift right
-                    y=f"({y})+{d * 2}",                  # Shift down
+                    x=f"(w-text_w)/2+{d * 2}",
+                    y=f"({y})+{d * 2}",
                 )
 
-            # ── Main coloured text (top layer) ────────────────────────────
             video_stream = video_stream.filter(
                 "drawtext",
                 **base,
                 text=safe,
                 fontcolor=color,
-                borderw=4,                               # Thick black outline
+                borderw=4,
                 bordercolor="black",
                 shadowcolor="black@0.6",
                 shadowx=2,
                 shadowy=2,
-                x="(w-text_w)/2",                       # Always centred
+                x="(w-text_w)/2",
                 y=y,
             )
 
@@ -154,13 +140,8 @@ class Composer:
     def _generate_ass_subtitles(self, text: str, duration: float, scene_id: int) -> str:
         """
         Generates an Advanced Substation Alpha (.ass) file for 'Elite' style captions.
-        Highlights 'Power Words' in Gold and scales them up 20%.
         """
         ass_path = os.path.join(self.temp_dir, f"scene_{scene_id}.ass")
-        # Elite v8.0 Power Words
-        power_words = ["SHIVA", "SECRET", "ANCIENT", "POWER", "MYSTERY", "TRUTH", "DYNASTY", "GOD", "MAHADEV", "SHAKTI", "RAHASYA", "SATYA"]
-        
-        # ── ASS HEADER ──────────────────────────────────────────────────────
         header = [
             "[Script Info]",
             "ScriptType: v4.00+",
@@ -176,25 +157,15 @@ class Composer:
             "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         ]
 
-        # ── PROCESS WORDS ────────────────────────────────────────────────────
-        # Regex to find **text** and replace with ASS styling
-        # Includes support for punctuation attached to the stars
-        import re
         def _apply_style(match):
             word = match.group(1)
-            # \c&H00D7FF& (Gold in BGR), \fscx120\fscy120 (+20% scale)
             return f"{{\\c&H00D7FF&\\fscx120\\fscy120}}{word}{{\\r}}"
 
         styled_text = re.sub(r"\*\*(.*?)\*\*", _apply_style, text)
-        
-        # ── WRAPPING ─────────────────────────────────────────────────────────
-        # In ASS, \N is a forced line break. I'll split into 24-char lines.
         lines = _wrap_text(styled_text, max_chars=28)
         ass_text = "\\N".join(lines)
-
-        # ── ADD EVENT ────────────────────────────────────────────────────────
-        # 0.5s padding to match video trim
         end_time = duration + 0.5
+
         def fmt_time(t):
             h = int(t // 3600)
             m = int((t % 3600) // 60)
@@ -205,13 +176,9 @@ class Composer:
 
         with open(ass_path, "w", encoding="utf-8") as f:
             f.write("\n".join(header))
-        
         return ass_path
 
     def process_scene(self, scene, video_pair, is_avatar=False):
-        """
-        Combines Audio + Visuals + Caption for one scene.
-        """
         import re
         scene_id       = scene.get('id', 'Unknown')
         audio_path     = scene.get('audio_path', '')
@@ -220,7 +187,6 @@ class Composer:
         output_path    = os.path.join(self.temp_dir, f"scene_{scene_id}.mp4")
 
         try:
-            # ── Audio Validation ─────────────────────────────────────────────
             if not audio_path or not os.path.exists(audio_path):
                 print(f"   ❌ Scene {scene_id}: Audio file missing or invalid path.")
                 return None
@@ -228,7 +194,6 @@ class Composer:
             input_audio = ffmpeg.input(audio_path)
 
             if is_avatar:
-                # ── AVATAR MODE ────────────────────────────────────────────
                 print(f"   ⚙️ Processing Scene {scene_id}: 🤖 Avatar Mode (Cropped)")
                 video_stream = (
                     ffmpeg.input(video_pair[0], stream_loop=-1)
@@ -240,7 +205,6 @@ class Composer:
                     .filter('fps', fps=30, round='up')
                 )
             else:
-                # ── STABLE A/B SPLIT (Switch halfway through) ──────────────
                 print(f"   ⚙️ Processing Scene {scene_id}: 🎞️ A/B Split Mode")
                 path_a, path_b = video_pair
                 duration_a = total_duration / 2
@@ -260,14 +224,11 @@ class Composer:
                 )
                 video_stream = ffmpeg.concat(stream_a, stream_b, v=1, a=0)
 
-            # ── Burn Elite Subtitles (ASS) ──────────────────────────────────
             if caption_text:
                 ass_path = self._generate_ass_subtitles(caption_text, total_duration, scene_id)
-                # Use relative path to avoid Windows drive 'C:' colon nightmare in FFmpeg filters
                 rel_ass_path = os.path.relpath(ass_path, os.getcwd()).replace("\\", "/")
                 video_stream = video_stream.filter('subtitles', rel_ass_path, fontsdir="assets/fonts")
 
-            # ── Encode ────────────────────────────────────────────────────
             runner = ffmpeg.output(
                 video_stream, input_audio, output_path,
                 vcodec='libx264', acodec='aac', pix_fmt='yuv420p', shortest=None
@@ -281,25 +242,13 @@ class Composer:
 
     def render_all_scenes(self, script_data, video_pairs):
         rendered_paths = []
-        avatar_indices = []
-
-        # Disabled for Elite v5.1 (Male voice mismatch with female avatar)
-        avatar_indices = []
-
         for i, scene in enumerate(script_data):
             current_pair = video_pairs[i]
-            is_avatar    = False
-
-            if i in avatar_indices:
-                current_pair = (self.avatar_path, None)
-                is_avatar    = True
-            elif current_pair is None:
+            if current_pair is None:
                 continue
-
-            output_path = self.process_scene(scene, current_pair, is_avatar)
+            output_path = self.process_scene(scene, current_pair)
             if output_path:
                 rendered_paths.append(output_path)
-
         return rendered_paths
 
     def concatenate_with_transitions(self, video_paths, output_filename="final_short.mp4"):
@@ -315,26 +264,40 @@ class Composer:
         if not video_paths:
             return None
 
+        # ── INITIAL CLIP ─────────────────────────────────────────────────────
         input1      = ffmpeg.input(video_paths[0])
-        v_stream    = input1.video
-        a_stream    = input1.audio
+        # Force consistent audio format/sample rate before processing
+        v_stream    = input1.video.filter('format', 'yuv420p').filter('scale', 1080, 1920)
+        a_stream    = input1.audio.filter('aresample', 44100).filter('aformat', channel_layouts='stereo')
+        
         current_dur = self.get_duration(video_paths[0])
 
         for i in range(1, len(video_paths)):
             next_clip = ffmpeg.input(video_paths[i])
             next_dur  = self.get_duration(video_paths[i])
             trans_dur = 0.5
-            offset    = current_dur - trans_dur
-            effect    = random.choice(self.transitions)
+            
+            # ── PRECISION OFFSETS ─────────────────────────────────────────────
+            # Subtract a small safety margin (0.05s) to ensure the offset 
+            # is always strictly within the stream, even with rounding errors.
+            offset = max(0, current_dur - trans_dur - 0.05)
+            
+            effect = random.choice(self.transitions)
             print(f"   ✨ Transition {i}: '{effect}' at {offset:.2f}s")
 
+            # Validate next clip has video/audio
+            next_v = next_clip.video.filter('format', 'yuv420p').filter('scale', 1080, 1920)
+            next_a = next_clip.audio.filter('aresample', 44100).filter('aformat', channel_layouts='stereo')
+
             v_stream = ffmpeg.filter(
-                [v_stream, next_clip.video], 'xfade',
+                [v_stream, next_v], 'xfade',
                 transition=effect, duration=trans_dur, offset=offset
             )
             a_stream = ffmpeg.filter(
-                [a_stream, next_clip.audio], 'acrossfade', d=trans_dur
+                [a_stream, next_a], 'acrossfade', d=trans_dur
             )
+            
+            # Update running duration: segment_a + segment_b - overlap
             current_dur = (current_dur + next_dur) - trans_dur
 
         try:
@@ -348,5 +311,6 @@ class Composer:
             return output_path
 
         except ffmpeg.Error as e:
-            print(f"❌ Stitching Error: {e.stderr.decode('utf8') if e.stderr else str(e)}")
+            err_log = e.stderr.decode('utf8') if e.stderr else str(e)
+            print(f"❌ Stitching Error: {err_log}")
             return None

@@ -102,6 +102,9 @@ async def main(dry_run: bool = False):
     final_video_path = None
     if final_scene_paths:
         final_video_path = composer.concatenate_with_transitions(final_scene_paths)
+        # ── Safely cleanup ──────────────────────────────────────────────────
+        # Windows delay to ensure FFmpeg released all file handles
+        await asyncio.sleep(2)
         clean_cache()
     else:
         print("❌ Failed to generate any scenes.")
