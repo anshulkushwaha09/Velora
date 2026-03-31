@@ -200,67 +200,101 @@ class ContentBrain:
 
     def generate_script(self, topic):
         """
-        Generates a MASTER ELITE Hindi script with VIRAL retention rules (v9.0).
+        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (v9.0).
+        Enforces: 28–34s total, 12–14 scenes, phonetic Hinglish, realistic stock keywords.
         """
         print(f"📝 Writing ELITE MASTER script for: {topic}...")
         prompt = f"""
-    You are an ELITE viral YouTube Shorts script generator optimized for MAXIMUM RETENTION and REALISTIC STOCK FOOTAGE.
-    Topic: {topic}
+You are an ELITE viral YouTube Shorts script generator optimized for MAXIMUM RETENTION and REALISTIC STOCK FOOTAGE.
 
-    ━━━━━━━━━━━━━━━━━━━━━━
-    📊 CORE OBJECTIVE:
-    Create a HIGH-RETENTION YouTube Short (28–34 seconds) that prevents viewer drop.
+Topic: {topic}
 
-    ━━━━━━━━━━━━━━━━━━━━━━
-    📏 STRICT TIMING RULES:
-    - Total Duration: 28–34 seconds ONLY
-    - Total Scenes: 12 ONLY
-    - Each Scene: 2–2.5 seconds
-    - Each voiceover: MAX 6 WORDS (natural flow, NOT robotic).
-    ⚠️ IMPORTANT: 9 words takes too long (4+ seconds). Keep it to 5-6 words.
+━━━━━━━━━━━━━━━━━━━━━━
+📊 CORE OBJECTIVE:
+Create a HIGH-RETENTION YouTube Short (28–34 seconds) that prevents viewer drop.
 
-    ━━━━━━━━━━━━━━━━━━━━━━
-    🧠 RETENTION STRUCTURE (follow EXACTLY):
-    1. Scene 1  → SHOCK CLAIM (no intro, no question)
-    2. Scene 2  → INSTANT PROOF (visual confirmation)
-    3. Scenes 3–4  → FAST FACTS
-    4. Scenes 5–8  → ESCALATION (bigger reveal)
-    5. Scenes 9–10 → TWIST / NEW INFO
-    6. Scenes 11–12 → LOOP BACK (connect to hook)
+━━━━━━━━━━━━━━━━━━━━━━
+📏 STRICT TIMING RULES:
+- Total Duration: 28–34 seconds ONLY
+- Total Scenes: 12 ONLY
+- Each Scene: 2–2.5 seconds
+- Each voiceover: MAX 6 WORDS (natural flow, NOT robotic).
+⚠️ IMPORTANT: 9 words takes too long (4+ seconds). Keep it to 5-6 words.
 
-    ⚠️ CRITICAL RULES:
-    - Proof MUST appear in Scene 2
-    - NO slow explanation anywhere
-    - EVERY scene must increase curiosity
-    - Maintain CONTINUOUS STORY FLOW between scenes
-    - Rapid-fire delivery: One key fact per scene.
+━━━━━━━━━━━━━━━━━━━━━━
+🧠 RETENTION STRUCTURE (follow EXACTLY):
+1. Scene 1  → SHOCK CLAIM (no intro, no question)
+2. Scene 2  → INSTANT PROOF (visual confirmation)
+3. Scenes 3–4  → FAST FACTS
+4. Scenes 5–8  → ESCALATION (bigger reveal)
+5. Scenes 9–10 → TWIST / NEW INFO
+6. Scenes 11–12 → LOOP BACK (connect to hook)
 
-    ━━━━━━━━━━━━━━━━━━━━━━
-    🎬 STOCK VISUAL RULES:
-    - visual_search_1: PRIMARY searchable keyword (e.g., "ancient temple aerial").
-    - visual_search_2: SECONDARY backup keyword (e.g., "hindu stone carving").
-    - visual_style: Aesthetic direction (e.g., "cinematic drone", "dramatic close up").
-    - ⚠️ NO placeholder text. ONLY realistic, searchable stock keywords.
+⚠️ CRITICAL RULES:
+- Proof MUST appear in Scene 2
+- NO slow explanation anywhere
+- EVERY scene must increase curiosity
+- Maintain CONTINUOUS STORY FLOW between scenes
+- Rapid-fire delivery: One key fact per scene.
 
-    ━━━━━━━━━━━━━━━━━━━━━━
-    🎭 TONE & LANGUAGE:
-    - Voiceover: Conversational PHONETIC HINGLISH (Hindi in Roman script).
-    - ⚠️ PHONETIC RULE: Use "shehar", "banaya gaya", "pathar se" (natural spoken Hindi).
-    - Subtitles: ALL-CAPS ENGLISH ONLY for 'caption_text'.
-    - ⚠️ SUBTITLE RULE: Wrap 1-2 powerful words in **stars** (e.g., **ANCIENT SECRET**).
+━━━━━━━━━━━━━━━━━━━━━━
+🎬 STOCK VISUAL RULES:
+Use ONLY searchable realistic stock footage keywords (Pexels / Pixabay style).
 
-    OUTPUT FORMAT: Return ONLY a clean JSON array of 12 objects.
-    [
-      {{
-        "id": 1,
-        "voiceover_text": "...",
-        "caption_text": "...",
-        "visual_search_1": "...",
-        "visual_search_2": "...",
-        "visual_style": "..."
-      }}
-    ]
-    """
+✅ GOOD keyword examples:
+- "cave tunnel dark", "ancient temple india", "stone ruins aerial"
+- "scientist lab", "radar screen", "fog forest", "shadow hallway"
+- "drone ruins", "mountain aerial", "close up stone carving"
+
+❌ BAD keywords (too complex, unsearchable):
+- "ancient underground temple scan", "god awakening light beam"
+
+Each scene MUST have:
+- visual_search_1: simple 2–3 word stock keyword (primary)
+- visual_search_2: different backup 2–3 word stock keyword
+⚠️ DO NOT repeat the same visual keywords across scenes.
+
+━━━━━━━━━━━━━━━━━━━━━━
+🎭 LANGUAGE RULES:
+- Voiceover: Hinglish (Roman Hindi + English mix)
+- MUST sound natural when spoken aloud
+- Maintain story continuity between scenes
+
+Use connecting phrases naturally:
+- "aur phir", "lekin yeh to bas shuruaat thi", "sabse shocking baat yeh hai"
+
+━━━━━━━━━━━━━━━━━━━━━━
+🔊 PRONUNCIATION CONTROL (CRITICAL):
+Write Hinglish PHONETICALLY as it is clearly spoken:
+✅ "shehar" not "sehar"
+✅ "hairaan" not "hern"
+✅ "zameen" not "zamin"
+✅ "badal" not "baadaal"
+⚠️ Avoid difficult Sanskrit-heavy or regional words.
+
+━━━━━━━━━━━━━━━━━━━━━━
+🚫 STRICT DON'TS:
+- NO questions at scene start
+- NO slow buildup
+- NO repetition of visuals or facts
+- NO generic filler words like "mystery", "secret", "ancient" in voiceover
+- Be SPECIFIC and VISUAL in every line
+
+━━━━━━━━━━━━━━━━━━━━━━
+📦 OUTPUT FORMAT (STRICT JSON — return ONLY this, no extra text):
+[
+  {{
+    "id": 1,
+    "voiceover_text": "6–9 words Hinglish phonetic natural flow",
+    "caption_text": "2–4 WORDS WITH **HIGHLIGHT**",
+    "visual_search_1": "simple stock keyword",
+    "visual_search_2": "backup stock keyword",
+    "visual_style": "drone / zoom / dark / cinematic"
+  }}
+]
+
+Return ONLY the JSON array. No explanation. No preamble. No markdown block.
+"""
         raw_text = _call_with_fallback(prompt)
         clean_text = raw_text.replace('```json', '').replace('```', '').strip()
 

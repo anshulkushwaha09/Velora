@@ -1,156 +1,186 @@
 import os
 import requests
 import random
-from typing import List, Dict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class AssetManager:
-    def __init__(self, pexels_api_key="", pixabay_api_key=""):
-        # Load API keys from environment if not provided
-        self.pexels_key = pexels_api_key or os.getenv("PEXELS_API_KEY", "")
-        self.pixabay_key = pixabay_api_key or os.getenv("PIXABAY_API_KEY", "")
+    def __init__(self):
+        self.pexels_key = os.getenv("PEXELS_API_KEY")
+        self.pixabay_key = os.getenv("PIXABAY_API_KEY")
         
-        # Directories
+        if not self.pexels_key:
+            raise EnvironmentError("PEXELS_API_KEY not set. Please add it to your .env file.")
+        
+        self.pexels_url = "https://api.pexels.com/videos/search"
+        self.pixabay_url = "https://pixabay.com/api/videos/"
+        
+        # Ensure download directory exists
         self.assets_dir = os.path.join(os.getcwd(), "assets", "video_clips")
         os.makedirs(self.assets_dir, exist_ok=True)
 
-    def download_video(self, url: str, filename: str) -> str:
-        """
-        Downloads a video with retries and a headers fake-out.
-        """
-        save_path = os.path.join(self.assets_dir, filename)
-        
-        # Caching strategy (ensure file exists AND is not empty)
-        if os.path.exists(save_path) and os.path.getsize(save_path) > 0:
-            return save_path
-
-        try:
-            print(f"      📥 Downloading clip to: {filename}...")
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            }
-            response = requests.get(url, headers=headers, stream=True, timeout=30)
-            response.raise_for_status()
-            
-            with open(save_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            return save_path
-
-        except Exception as e:
-            print(f"      ⚠️ Download failed: {e}")
-            if os.path.exists(save_path):
-                os.remove(save_path)
-            return None
-
-    def search_pexels(self, query: str) -> str:
-        """
-        Search Pexels API for a 1080x1920 (Portrait) video.
-        """
-        if not self.pexels_key:
-            return None
-            
-        url = "https://api.pexels.com/videos/search"
+    def _search_pexels(self, query):
+        """Internal: Search Pexels specifically."""
+        print(f"      📸 Searching Pexels...")
         headers = {"Authorization": self.pexels_key}
         params = {
             "query": query,
-            "orientation": "portrait",
             "per_page": 5,
-            "min_width": 720
+            "orientation": "portrait",
+            "size": "medium"
         }
-        
         try:
-            response = requests.get(url, headers=headers, params=params, timeout=15)
-            response.raise_for_status()
-            data = response.json()
-            
-            videos = data.get("videos", [])
-            if not videos:
-                return None
-                
-            # Pick a random one for variety or use the first
-            video = random.choice(videos)
-            
-            # Find the best quality link
-            files = video.get("video_files", [])
-            # Priority: 1080x1920 or highest res
-            files.sort(key=lambda x: x.get("width", 0), reverse=True)
-            
-            return files[0].get("link")
-        except Exception as e:
-            print(f"      ⚠️ Pexels Error: {e}")
-            return None
+            r = requests.get(self.pexels_url, headers=headers, params=params, timeout=10)
+            if r.status_code == 200:
+                videos = r.json().get('videos', [])
+                if videos:
+                    # Pick best quality from a random choice of top 5
+                    vid = random.choice(videos)
+                    files = vid['video_files']
+                    files.sort(key=lambda x: x['width'] * x['height'], reverse=True)
+                    return files[0]['link']
+        except: pass
+        return None
 
-    def search_pixabay(self, query: str) -> str:
-        """
-        Search Pixabay API for a video.
-        """
+    def _search_pixabay(self, query):
+        """Internal: Search Pixabay specifically."""
         if not self.pixabay_key:
             return None
             
-        url = "https://pixabay.com/api/videos/"
+        print(f"      🎨 Searching Pixabay...")
         params = {
             "key": self.pixabay_key,
             "q": query,
             "per_page": 5,
-            "video_type": "film"
+            "video_type": "film", # 'film' or 'animation'
+            "safesearch": "true"
         }
-        
         try:
-            response = requests.get(url, params=params, timeout=15)
-            response.raise_for_status()
-            data = response.json()
+            r = requests.get(self.pixabay_url, params=params, timeout=10)
+            if r.status_code == 200:
+                hits = r.json().get('hits', [])
+                if hits:
+                    vid = random.choice(hits)
+                    # Pixabay videos dict has 'large', 'medium', 'small', 'tiny'
+                    # We want 'medium' or 'large'
+                    v_data = vid['videos']
+                    # Try large first, then medium
+                    best = v_data.get('large', v_data.get('medium'))
+                    return best['url']
+        except: pass
+        return None
+
+    def search_video(self, query, niche="Ancient India", duration_min=4):
+        """
+        Dual-Search Strategy with Niche Fallback:
+        1. Try Pexels
+        2. If fails, try Pixabay
+        3. If fails, try simplified query (Last word)
+        4. If EVERYTHING fails, fallback to the Niche Name (Safe results)
+        """
+        print(f"   🔍 Searching for: '{query}'...")
+        
+        # Step 1: Pexels
+        url = self._search_pexels(query)
+        if url: return url
+
+        # Step 2: Pixabay Fallback
+        url = self._search_pixabay(query)
+        if url: return url
+
+        # Step 3: Simplified search (limited to 1 retry)
+        if " " in query:
+            simple = query.split()[-1]
+            # If the last word is too generic (secret, mystery), skip to Step 4
+            generic_words = ["secret", "mystery", "history", "actually", "surprising", "fact"]
+            if simple.lower() not in generic_words:
+                print(f"      ⚠️ No direct results. Trying simple: '{simple}'...")
+                return self.search_video(simple, niche=niche)
             
-            hits = data.get("hits", [])
-            if not hits:
-                return None
-                
-            video = random.choice(hits)
-            # Pixabay provides fixed sizes: large, medium, small
-            return video.get("videos", {}).get("medium", {}).get("url")
+        # Step 4: Final Safe Fallback (The Niche)
+        print(f"      🛡️ All specific searches failed. Using niche fallback: '{niche}'")
+        return self._search_pexels(niche) or self._search_pixabay("ancient architecture")
+
+    def download_video(self, url, filename):
+        """
+        Downloads the video content to a local file.
+        """
+        save_path = os.path.join(self.assets_dir, filename)
+        
+        # Caching strategy
+        if os.path.exists(save_path):
+            return save_path
+
+        try:
+            with requests.get(url, stream=True, timeout=15) as r:
+                r.raise_for_status()
+                with open(save_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            return save_path
         except Exception as e:
-            print(f"      ⚠️ Pixabay Error: {e}")
+            print(f"      ❌ Error downloading {filename}: {e}")
             return None
 
-    def get_videos(self, script_data: List[Dict]) -> Dict:
+    def get_videos(self, script_data, niche="Ancient India"):
         """
-        Downloads two clips per scene for the A/B transition logic.
-        v9.0 Update: Uses 'visual_search_1' and 'visual_search_2'.
+        NEW LOGIC: Downloads TWO videos per scene (A and B).
+        Returns a list of tuples: [(path_a, path_b), (path_a, path_b), ...]
         """
-        print(f"🎞️ Gathering Visual Assets for {len(script_data)} scenes...")
-        assets_map = {}
-        
+        print("🎥 Starting Double-Feature Video Download...")
+        video_pairs = []
+
         for scene in script_data:
             scene_id = scene['id']
-            # Support both legacy (visual_1) and new v9.0 schema
-            q1 = scene.get('visual_search_1', scene.get('visual_1', 'mystery'))
-            q2 = scene.get('visual_search_2', scene.get('visual_2', 'ancient history'))
             
-            print(f"   🔍 Scene {scene_id}: Searching for '{q1}' & '{q2}'...")
+            # 1. Get Search Terms (v9.0 fields first, fallback to legacy v8.0 fields)
+            query_a = scene.get('visual_search_1', scene.get('visual_1', 'ancient india'))
+            query_b = scene.get('visual_search_2', scene.get('visual_2', query_a))
             
+            # 2. Search & Download Clip A
+            url_a = self.search_video(query_a, niche=niche)
             path_a = None
+            if url_a:
+                path_a = self.download_video(url_a, f"scene_{scene_id}_a.mp4")
+            
+            # 3. Search & Download Clip B
+            url_b = self.search_video(query_b, niche=niche)
             path_b = None
+            if url_b:
+                path_b = self.download_video(url_b, f"scene_{scene_id}_b.mp4")
             
-            # Clip A: Search Pexels then Pixabay
-            link_a = self.search_pexels(q1) or self.search_pixabay(q1)
-            if link_a:
-                path_a = self.download_video(link_a, f"scene_{scene_id}_a.mp4")
-            
-            # Clip B: Search Pexels then Pixabay
-            link_b = self.search_pexels(q2) or self.search_pixabay(q2)
-            if link_b:
-                path_b = self.download_video(link_b, f"scene_{scene_id}_b.mp4")
-                
-            # Fallbacks: If one failed, duplicate the other for stitching safety
-            if path_a and not path_b:
-                path_b = path_a
-            if path_b and not path_a:
+            # 4. Fallback Logic (Self-Healing)
+            # If B fails, use A twice. If A fails, use B twice.
+            if not path_a and path_b: 
                 path_a = path_b
-                
+                print(f"      ⚠️ Scene {scene_id} Clip A missing. Using Clip B for both.")
+            if not path_b and path_a: 
+                path_b = path_a
+                print(f"      ⚠️ Scene {scene_id} Clip B missing. Using Clip A for both.")
+
+            # 5. Final Check
             if path_a and path_b:
-                assets_map[scene_id] = (path_a, path_b)
+                video_pairs.append((path_a, path_b))
                 print(f"   ✅ Scene {scene_id} Ready (A + B).")
             else:
                 print(f"   ❌ Scene {scene_id} Completely Failed (No videos found).")
-                assets_map[scene_id] = None
-        
-        return assets_map
+                video_pairs.append(None)
+
+        return video_pairs
+
+# --- TESTING ---
+if __name__ == "__main__":
+    manager = AssetManager()
+    
+    # Test with new dual-visual format
+    test_script = [
+        {
+            "id": 1, 
+            "visual_1": "cyberpunk city neon", 
+            "visual_2": "hacker typing computer"
+        }
+    ]
+    
+    results = manager.get_videos(test_script)
+    print("🎥 Assets Downloaded:", results)
