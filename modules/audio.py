@@ -18,9 +18,10 @@ class AudioEngine:
         output_path = os.path.join(self.output_dir, output_filename)
         
         # ── CLEAN TEXT ────────────────────────────────────────────────────────
-        # 1. Remove ANY brackets or parentheses metadata
-        clean_text = re.sub(r'\[.*?\]', '', text)
-        clean_text = re.sub(r'\(.*?\)', '', clean_text)
+        # 1. Remove ANY brackets, parentheses, or asterisks (metadata/formatting)
+        clean_text = re.sub(r'\[.*?\]', '', text)  # Removes [WHOOSH], [SOUND]
+        clean_text = re.sub(r'\(.*?\)', '', clean_text) # Removes (pause)
+        clean_text = re.sub(r'\*', '', clean_text) # Removes **bolding** for TTS
         # 2. Final cleanup of extra whitespace
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
 

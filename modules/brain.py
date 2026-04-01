@@ -35,7 +35,7 @@ def _initialize_clients():
 
 clients = _initialize_clients()
 
-# Model fallback chain
+# Model fallback chain (Updated for April 2026)
 FALLBACK_MODELS = [
     "gemini-2.0-flash-lite",
     "gemini-2.0-flash",
@@ -65,8 +65,8 @@ def _call_with_fallback(prompt: str) -> str:
                 err_str = str(e)
                 if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
                     print(f"      ⚠️ Quota hit on {model} (Key #{i+1})")
-                elif "404" in err_str or "not found" in err_str.lower():
-                    print(f"      ⚠️ Model {model} unavailable.")
+                elif "400" in err_str or "INVALID_ARGUMENT" in err_str:
+                    print(f"      ⚠️ Invalid Argument on {model} (Key #{i+1}) - Skipping...")
                 else:
                     print(f"      ⚠️ Error on {model}: {e}")
                 last_error = e
@@ -210,30 +210,35 @@ You are an ELITE viral YouTube Shorts script generator optimized for MAXIMUM RET
 Topic: {topic}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📊 CORE OBJECTIVE:
-Create a HIGH-RETENTION YouTube Short (30–40 seconds) that prevents viewer drop in first 8 seconds.
+📊 ELITE v10.0 CORE OBJECTIVE:
+Create an "ATOMIC" YouTube Short (30–40s) that enforces a "Hook, Prove, Payoff" cycle to maintain 85%+ retention.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📏 STRICT TIMING RULES:
 - Total Duration: 30–40 seconds ONLY
 - Total Scenes: 11 ONLY
 - Each Scene: 3–3.5 seconds
-- Each voiceover: 6–8 words (natural flow, NOT robotic)
+- Each voiceover: 6–8 words (STRICT natural Hinglish flow)
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🧠 RETENTION STRUCTURE (follow EXACTLY):
-1. Scene 1 → SHOCK CLAIM
-2. Scene 2 → INSTANT PROOF
-3. Scene 3–4 → FAST FACTS
-4. Scene 5–7 → ESCALATION
-5. Scene 8–9 → TWIST / NEW INFO
-6. Scene 10–11 → LOOP BACK
+🧠 RETENTION STRUCTURE (Elite v10.0):
+1. Scene 1 → ATOMIC CLAIM (Shake their reality)
+2. Scene 2 → FLASH PROOF (Visual/Fast proof)
+3. Scene 3–4 → EXPLORATION (Fast Facts)
+4. Scene 5–7 → THE BIG TWIST / NEW DATA
+5. Scene 8–9 → IMPLICATIONS
+6. Scene 10–11 → RE-ENGAGEMENT & LOOP
 
 ⚠️ CRITICAL RULES:
-- Proof MUST appear in Scene 2
-- NO slow explanation
-- EVERY scene must increase curiosity
-- Maintain CONTINUOUS STORY FLOW between scenes
+- Scene 1 MUST be a "Shock" statement, NOT a question.
+- Every 3 scenes MUST have a **Pattern Interrupt** text highlight.
+- Maintain ABSOLUTE CONTINUITY between scenes.
+
+━━━━━━━━━━━━━━━━━━━━━━
+🎭 LANGUAGE & HIGHLIGHTING:
+- Voiceover: Phonetic Hinglish (Roman Hindi + English).
+- **POWER WORDS**: Use `**double asterisks**` to highlight 1-2 words per scene for visual pops.
+- Highlight format: "Yeh **BOHOT DANGEROUS** tha."
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🎬 STOCK VISUAL RULES:

@@ -159,10 +159,11 @@ class Composer:
 
         def _apply_style(match):
             word = match.group(1)
-            return f"{{\\c&H00D7FF&\\fscx120\\fscy120}}{word}{{\\r}}"
+            # Gold color & 20% scale bump for power words
+            return f"{{\\c&H00D7FF&\\fscx120\\fscy120\\b1}}{word}{{\\r}}"
 
         styled_text = re.sub(r"\*\*(.*?)\*\*", _apply_style, text)
-        lines = _wrap_text(styled_text, max_chars=28)
+        lines = _wrap_text(styled_text, max_chars=26)
         ass_text = "\\N".join(lines)
         end_time = duration + 0.5
 
@@ -203,6 +204,8 @@ class Composer:
                     .filter('scale', 1080, 1920, force_original_aspect_ratio='increase')
                     .filter('crop', 1080, 1920)
                     .filter('fps', fps=30, round='up')
+                    # Elite Pattern Interrupt: Slow 1.5x zoom
+                    .filter('zoompan', z='min(zoom+0.0015,1.5)', d=1, x='iw/2-(iw/zoom/2)', y='ih/2-(ih/zoom/2)', s='1080x1920')
                 )
             else:
                 print(f"   ⚙️ Processing Scene {scene_id}: 🎞️ A/B Split Mode")
@@ -215,12 +218,16 @@ class Composer:
                     .trim(duration=duration_a).setpts('PTS-STARTPTS')
                     .filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
                     .filter('fps', fps=30, round='up')
+                    # Segment A Zoom
+                    .filter('zoompan', z='min(zoom+0.0015,1.5)', d=1, x='iw/2-(iw/zoom/2)', y='ih/2-(ih/zoom/2)', s='1080x1920')
                 )
                 stream_b = (
                     ffmpeg.input(path_b, stream_loop=-1)
                     .trim(duration=duration_b).setpts('PTS-STARTPTS')
                     .filter('scale', 1080, 1920, force_original_aspect_ratio='increase').filter('crop', 1080, 1920)
                     .filter('fps', fps=30, round='up')
+                    # Segment B Zoom (reset)
+                    .filter('zoompan', z='min(zoom+0.0015,1.5)', d=1, x='iw/2-(iw/zoom/2)', y='ih/2-(ih/zoom/2)', s='1080x1920')
                 )
                 video_stream = ffmpeg.concat(stream_a, stream_b, v=1, a=0)
 
