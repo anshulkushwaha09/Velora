@@ -54,9 +54,9 @@ async def main(dry_run: bool = False):
     # 1. BRAIN: Get Script
     brain = ContentBrain()
     script = None
-    if os.path.exists("script.json"):
+    if os.path.exists("script1.json"):
         print("📂 Loading existing script.json...")
-        with open("script.json", "r", encoding="utf-8") as f:
+        with open("script1.json", "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, dict) and "script" in data:
                 script = data["script"]
