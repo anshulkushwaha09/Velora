@@ -106,10 +106,10 @@ class AssetManager:
         """
         Downloads the video content to a local file.
         """
-        save_path = os.path.join(self.assets_dir, filename)
+        save_path = os.path.join(self.assets_dir, filename).replace("\\", "/")
         
         # Caching strategy
-        if os.path.exists(save_path):
+        if os.path.exists(save_path) and os.path.getsize(save_path) > 0:
             return save_path
 
         try:
@@ -118,9 +118,16 @@ class AssetManager:
                 with open(save_path, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=8192):
                         f.write(chunk)
-            return save_path
+            
+            # Post-download validation
+            if os.path.exists(save_path) and os.path.getsize(save_path) > 1024: # Must be > 1KB
+                return save_path
+            else:
+                if os.path.exists(save_path): os.remove(save_path)
+                return None
         except Exception as e:
             print(f"      ❌ Error downloading {filename}: {e}")
+            if os.path.exists(save_path): os.remove(save_path)
             return None
 
     def get_videos(self, script_data, niche="Ancient India"):
@@ -128,43 +135,38 @@ class AssetManager:
         NEW LOGIC: Downloads TWO videos per scene (A and B).
         Returns a list of tuples: [(path_a, path_b), (path_a, path_b), ...]
         """
-        print("🎥 Starting Double-Feature Video Download...")
+        print(f"🎥 Starting Double-Feature Asset Download for {len(script_data)} scenes...")
         video_pairs = []
 
         for scene in script_data:
-            scene_id = scene['id']
+            scene_id = scene.get('id', 'Unknown')
             
-            # 1. Get Search Terms (v9.0 fields first, fallback to legacy v8.0 fields)
+            # 1. Get Search Terms
             query_a = scene.get('visual_search_1', scene.get('visual_1', 'ancient india'))
             query_b = scene.get('visual_search_2', scene.get('visual_2', query_a))
             
             # 2. Search & Download Clip A
             url_a = self.search_video(query_a, niche=niche)
-            path_a = None
-            if url_a:
-                path_a = self.download_video(url_a, f"scene_{scene_id}_a.mp4")
+            path_a = self.download_video(url_a, f"scene_{scene_id}_a.mp4") if url_a else None
             
             # 3. Search & Download Clip B
             url_b = self.search_video(query_b, niche=niche)
-            path_b = None
-            if url_b:
-                path_b = self.download_video(url_b, f"scene_{scene_id}_b.mp4")
+            path_b = self.download_video(url_b, f"scene_{scene_id}_b.mp4") if url_b else None
             
             # 4. Fallback Logic (Self-Healing)
-            # If B fails, use A twice. If A fails, use B twice.
             if not path_a and path_b: 
                 path_a = path_b
-                print(f"      ⚠️ Scene {scene_id} Clip A missing. Using Clip B for both.")
+                print(f"      ⚠️ Scene {scene_id} Clip A missing. Using Clip B as fallback.")
             if not path_b and path_a: 
                 path_b = path_a
-                print(f"      ⚠️ Scene {scene_id} Clip B missing. Using Clip A for both.")
+                print(f"      ⚠️ Scene {scene_id} Clip B missing. Using Clip A as fallback.")
 
             # 5. Final Check
             if path_a and path_b:
                 video_pairs.append((path_a, path_b))
-                print(f"   ✅ Scene {scene_id} Ready (A + B).")
+                print(f"   ✅ Scene {scene_id} Assets Ready.")
             else:
-                print(f"   ❌ Scene {scene_id} Completely Failed (No videos found).")
+                print(f"   ❌ Scene {scene_id} Assets Failed.")
                 video_pairs.append(None)
 
         return video_pairs
