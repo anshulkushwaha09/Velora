@@ -46,7 +46,7 @@ def clean_cache():
     print("✨ Workspace clean!")
 
 
-async def main(dry_run: bool = False):
+async def main(dry_run: bool = False, script_path: str = None):
     print("🚀 STARTING AUTOMATION...")
     if dry_run:
         print("🧪 DRY-RUN MODE — video will be saved locally, not uploaded.")
@@ -54,26 +54,35 @@ async def main(dry_run: bool = False):
     # 1. BRAIN: Get Script
     brain = ContentBrain()
     script = None
-    if os.path.exists("script1.json"):
-        print("📂 Loading existing script.json...")
-        with open("script1.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if isinstance(data, dict) and "script" in data:
-                script = data["script"]
-                topic = data.get("topic", "Elite Mystery")
-            else:
-                script = data
-                topic = "Elite Mystery"
-    else:
+    topic = "Elite Mystery"
+
+    # If a specific script file was provided via --script
+    if script_path and os.path.exists(script_path):
+        print(f"📂 Loading manual script: {script_path}...")
+        try:
+            with open(script_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict) and "script" in data:
+                    script = data["script"]
+                    topic = data.get("topic", topic)
+                else:
+                    script = data
+        except Exception as e:
+            print(f"❌ Error loading manual script: {e}")
+            return
+    
+    # Otherwise, generate a fresh topic and script
+    if not script:
         try:
             topic, niche = brain.get_trending_topic()
             script = brain.generate_script(topic)
-            # Save script to temp for inspection (NOT root)
-            script_path = os.path.join(os.getcwd(), "assets", "temp", "script.json")
-            os.makedirs(os.path.dirname(script_path), exist_ok=True)
-            with open(script_path, "w", encoding="utf-8") as f:
+            
+            # Save the fresh script to assets/temp/
+            temp_script_path = os.path.join(os.getcwd(), "assets", "temp", "script.json")
+            os.makedirs(os.path.dirname(temp_script_path), exist_ok=True)
+            with open(temp_script_path, "w", encoding="utf-8") as f:
                 json.dump({"topic": topic, "script": script}, f, indent=4, ensure_ascii=False)
-                print(f"💾 Script saved to {script_path} for verification.")
+                print(f"💾 Fresh script saved to {temp_script_path} for verification.")
         except Exception as e:
             print(f"❌ Brain Error: {e}")
             return
@@ -95,30 +104,47 @@ async def main(dry_run: bool = False):
     assets_map = asset_manager.get_videos(script)
 
     # 4. COMPOSER: Merge Video + Audio
+    print(f"🎬 Starting Render for {len(script)} scenes...")
+    
+    # Pre-render verification: ensure all scenes have valid audio
+    for scene in script:
+        ap = scene.get('audio_path')
+        if not ap or not os.path.exists(ap):
+            print(f"❌ Critical Error: Audio missing for scene {scene.get('id')} at {ap}")
+            print("   Check previous audio generation logs for failures.")
+            return
+
     composer = Composer()
     final_scene_paths = composer.render_all_scenes(script, assets_map)
 
     # 5. STITCH WITH TRANSITIONS
     final_video_path = None
     if final_scene_paths:
-        final_video_path = composer.concatenate_with_transitions(final_scene_paths)
-        # ── Safely cleanup ──────────────────────────────────────────────────
-        # Windows delay to ensure FFmpeg released all file handles
-        await asyncio.sleep(2)
-        clean_cache()
+        try:
+            final_video_path = composer.concatenate_with_transitions(final_scene_paths)
+            
+            if final_video_path:
+                # ── Safely cleanup ONLY ON SUCCESS ─────────────────────────────────
+                # Windows delay to ensure FFmpeg released all file handles
+                print("✅ Generation successful. Cleaning up...")
+                await asyncio.sleep(2)
+                clean_cache()
+            else:
+                print("❌ Stitching failed. Keeping temporary files for inspection.")
+        except Exception as e:
+            print(f"❌ Critical Error during stitching: {e}")
+            print("   Temporary files preserved in 'assets/temp' and 'assets/video_clips'.")
     else:
-        print("❌ Failed to generate any scenes.")
+        print("❌ Failed to generate any valid scenes.")
         return
 
     if not final_video_path:
-        print("❌ Final video creation failed.")
         return
 
     # 6. UPLOAD TO YOUTUBE (skipped in dry-run mode)
     if dry_run:
-        print(f"\n✅ DRY RUN COMPLETE!")
-        print(f"   Video saved at: {final_video_path}")
-        print("   Upload step SKIPPED (dry-run mode).")
+        print(f"\n✨ DONE! Your masterpiece is ready.")
+        print(f"   Location: {final_video_path}")
     else:
         try:
             from modules.youtube_uploader import upload_video
@@ -137,6 +163,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Generate the video locally without uploading to YouTube."
     )
+    parser.add_argument(
+        "--script",
+        type=str,
+        default=None,
+        help="Path to an optional local script.json file to use instead of generating a new one."
+    )
     args = parser.parse_args()
 
-    asyncio.run(main(dry_run=args.dry_run))
+    asyncio.run(main(dry_run=args.dry_run, script_path=args.script))
