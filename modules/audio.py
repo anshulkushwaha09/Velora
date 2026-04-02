@@ -6,7 +6,7 @@ from mutagen.mp3 import MP3
 class AudioEngine:
     def __init__(self, voice="hi-IN-MadhurNeural"):
         self.voice = voice
-        self.output_dir = os.path.join(os.getcwd(), "assets", "audio_clips")
+        self.output_dir = os.path.abspath(os.path.join(os.getcwd(), "assets", "audio_clips"))
         os.makedirs(self.output_dir, exist_ok=True)
 
     async def generate_audio(self, text, output_filename, retries=3):
@@ -15,7 +15,7 @@ class AudioEngine:
         before sending to edge-tts.
         """
         import re
-        output_path = os.path.join(self.output_dir, output_filename)
+        output_path = os.path.normpath(os.path.join(self.output_dir, output_filename))
         
         # ── CLEAN TEXT ────────────────────────────────────────────────────────
         # 1. Remove ANY brackets, parentheses, or asterisks (metadata/formatting)
@@ -27,10 +27,15 @@ class AudioEngine:
 
         for attempt in range(retries):
             try:
-                # Elite Master Sync: Pitch -5Hz, Rate +26% (Authoritative & Snappy)
-                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+26%", pitch="-5Hz")
+                # Elite v10.0 Sync: Pitch -10Hz, Rate +26% (Deep, Authoritative & Snappy)
+                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+26%", pitch="-10Hz")
                 await communicate.save(output_path)
-                return output_path
+                
+                # Verify file existence and size
+                if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                    return output_path
+                else:
+                    raise FileNotFoundError(f"Failed to write audio file to {output_path}")
             
             except Exception as e:
                 print(f"      ⚠️ Audio Error (Attempt {attempt+1}/{retries}): {e}")
