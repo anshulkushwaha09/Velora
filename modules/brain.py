@@ -200,142 +200,83 @@ class ContentBrain:
 
     def generate_script(self, topic):
         """
-        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (Elite v9.0).
-        Enforces: 28–34s total, 12–14 scenes, phonetic Hinglish, realistic stock keywords.
+        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (Elite v10.0).
+        Enforces: 30–40s total, 11 scenes, shock hooks, and full-sentence captions.
         """
-        print(f"📝 Writing ELITE MASTER script for: {topic}...")
+        print(f"📝 Writing ELITE v10.0 MASTER script for: {topic}...")
         prompt = f"""
 You are an ELITE viral YouTube Shorts script generator optimized for MAXIMUM RETENTION and REALISTIC STOCK FOOTAGE.
 
 Topic: {topic}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-📊 ELITE v10.0 CORE OBJECTIVE:
-Create an "ATOMIC" YouTube Short (30–40s) that enforces a "Hook, Prove, Payoff" cycle to maintain 85%+ retention.
+📊 ELITE v10.0 RETENTION OBJECTIVE:
+Create a "FAST-PACED" documentary (30–40s) using the "Retention Loop" method.
+Target: 85%+ audience retention.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📏 STRICT TIMING RULES:
 - Total Duration: 30–40 seconds ONLY
 - Total Scenes: 11 ONLY
-- Each Scene: 3–3.5 seconds
-- Each voiceover: 6–8 words (STRICT natural Hinglish flow)
+- Each Scene: 2.8 – 3.5 seconds
+- voiceover_text: 8–10 words (Must be phonetic Hinglish — fast but clear)
+- caption_text: 6–10 words (Full sentence, NOT just keywords)
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🧠 RETENTION STRUCTURE (Elite v10.0):
-1. Scene 1 → ATOMIC CLAIM (Shake their reality)
-2. Scene 2 → FLASH PROOF (Visual/Fast proof)
-3. Scene 3–4 → EXPLORATION (Fast Facts)
-4. Scene 5–7 → THE BIG TWIST / NEW DATA
-5. Scene 8–9 → IMPLICATIONS
-6. Scene 10–11 → RE-ENGAGEMENT & LOOP
-
-⚠️ CRITICAL RULES:
-- Scene 1 MUST be a "Shock" statement, NOT a question.
-- Every 3 scenes MUST have a **Pattern Interrupt** text highlight.
-- Maintain ABSOLUTE CONTINUITY between scenes.
+🧠 NARRATIVE ANATOMY (Elite v10.0):
+1. Scene 1 → THE SHOCK HOOK. Absolutely NO questions. Start with a reality-shattering claim.
+   ❌ BAD: "Kya aapne Taj Mahal ke raaz sune hain?"
+   ✅ GOOD: "Taj Mahal ke neeche 22 kamre aaj bhi band hain."
+2. Scene 2 → THE PROOF. Instant visual fact to back up the claim.
+3. Scene 3-4 → THE JOURNEY. Connect the dots with "Aur iske peeche ka sach..."
+4. Scene 5-7 → THE TWIST / OPEN LOOP. "Lekin sabse strange baat yeh hai..."
+5. Scene 8-9 → THE IMPLICATION. Why this matters.
+6. Scene 10-11 → THE SATISFYING PAYOFF & LOOP. End on a high note that makes them re-watch.
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🎭 LANGUAGE & HIGHLIGHTING:
-- Voiceover: Phonetic Hinglish (Roman Hindi + English).
-- **POWER WORDS**: Use `**double asterisks**` to highlight 1-2 words per scene for visual pops.
-- Highlight format: "Yeh **BOHOT DANGEROUS** tha."
+🎭 LANGUAGE & VISUAL POP:
+- Voiceover: Phonetic Hinglish (Roman Hindi + English mix).
+- **HIGHLIGHTS**: Use `**double asterisks**` in `caption_text` for 2-3 power words per scene.
+- Formatting: "Scientists were **STUNNED** by this discovery."
 
 ━━━━━━━━━━━━━━━━━━━━━━
-🎬 STOCK VISUAL RULES:
-Use ONLY realistic stock footage from:
-- Pexels
-- Pixabay
-
-✅ Use ONLY searchable realistic visuals:
-Examples:
-- temple → "temple drone", "ancient temple india"
-- underground → "cave tunnel", "dark corridor"
-- discovery → "scientist lab", "radar screen"
-- mystery → "fog forest", "shadow hallway"
-- scale → "aerial ruins", "mountain drone"
-
-━━━━━━━━━━━━━━━━━━━━━━
-🔍 VISUAL SEARCH RULE:
+🎬 VISUAL SEARCH & STYLE:
+Use ONLY realistic stock keywords.
 Each scene MUST include:
-- "visual_search_1": simple stock keyword
-- "visual_search_2": backup keyword
+- "visual_search_1": broad stock keyword (e.g., "ancient temple")
+- "visual_search_2": specific backup keyword (e.g., "monument aerial")
+- "visual_style": zoom in / out / fast
 
-⚠️ Keywords MUST be:
-- realistic
-- searchable
-- NOT complex phrases
-
-❌ BAD: "ancient underground temple scan"
-✅ GOOD: "cave tunnel dark", "stone ruins aerial"
-
-⚠️ DO NOT repeat same visuals across scenes
-
-━━━━━━━━━━━━━━━━━━━━━━
-⚡ PATTERN INTERRUPT RULE:
-Every 3 scenes MUST introduce:
-- a twist OR
-- a shocking fact OR
-- a new reveal
-
-━━━━━━━━━━━━━━━━━━━━━━
-🎭 LANGUAGE & FLOW RULES:
-- Voiceover: Hinglish (Roman Hindi + English mix)
-- MUST sound natural when spoken
-- Maintain CONTINUITY between scenes
-
-Use connecting phrases when needed:
-- "aur phir"
-- "lekin yeh to bas shuruaat thi"
-- "sabse shocking baat yeh hai"
-
-━━━━━━━━━━━━━━━━━━━━━━
-🔊 PRONUNCIATION CONTROL (VERY IMPORTANT):
-Write Hinglish PHONETICALLY (as spoken clearly)
-Examples:
-- "shehar" (not sehar)
-- "hairaan" (not hern)
-- "badal" (not baadaal)
-- "zameen" (not zamin)
-
-⚠️ Avoid difficult or Sanskrit-heavy words
-
-━━━━━━━━━━━━━━━━━━━━━━
-🚫 STRICT DON'Ts:
-- No questions at start
-- No slow buildup
-- No repetition
-- No generic words like: mystery, secret, ancient
-- Be SPECIFIC and VISUAL
+⚠️ DO NOT use generic AI words like: mystery, secret, ancient (unless in the niche). Be SPECIFIC.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📦 OUTPUT FORMAT (STRICT JSON — return ONLY this):
 [
   {{
     "id": 1,
-    "voiceover_text": "6–8 words Hinglish (phonetic, natural flow)",
-    "caption_text": "2–4 WORDS WITH **HIGHLIGHT**",
+    "voiceover_text": "Shocking delivery text in phonetic Hinglish...",
+    "caption_text": "Full sentence with **DYNAMIC HIGHLIGHTS**...",
     "visual_search_1": "simple stock keyword",
     "visual_search_2": "backup keyword",
-    "visual_style": "drone / zoom / dark / cinematic"
+    "visual_style": "zoom in / out / fast"
   }}
 ]
 
-STYLE GUIDELINES
-- Write like a STORY, not a list of facts
-- Each line must connect logically to the next
-- Avoid repetition
-- Avoid generic lines
-- Avoid over-explaining
-
-Return ONLY the JSON array. No explanation. No preamble. No markdown block.
+Return ONLY the JSON array. No explanation. No preamble.
 """
         raw_text = _call_with_fallback(prompt)
         clean_text = raw_text.replace('```json', '').replace('```', '').strip()
 
         try:
             return json.loads(clean_text)
-        except json.JSONDecodeError:
-            print("❌ JSON Error. Recovery attempt...")
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON Error: {e}. Attempting recovery...")
+            match = re.search(r'\[.*\]', clean_text, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group())
+                except:
+                    pass
             return None
 
     def generate_description(self, topic: str, script_data: list) -> str:
@@ -388,16 +329,18 @@ Return ONLY the JSON array. No explanation. No preamble. No markdown block.
                 f"#Educational #Viral #FunFacts #Amazing #LearnSomethingNew"
             )
 
-
+# new
 # --- TESTING THE MODULE ---
 if __name__ == "__main__":
     brain = ContentBrain()
-    topic = brain.get_trending_topic()
+    topic, niche = brain.get_trending_topic()
     script = brain.generate_script(topic)
     desc   = brain.generate_description(topic, script)
     print("\n📋 Description preview:\n")
     print(desc)
 
-    with open("script.json", "w") as f:
-        json.dump(script, f, indent=4)
-        print("\n✅ Script saved to script.json")
+    test_output = os.path.join(os.getcwd(), "assets", "temp", "script_test.json")
+    os.makedirs(os.path.dirname(test_output), exist_ok=True)
+    with open(test_output, "w", encoding="utf-8") as f:
+        json.dump({"topic": topic, "script": script}, f, indent=4, ensure_ascii=False)
+        print(f"\n✅ Test script saved to {test_output}")
