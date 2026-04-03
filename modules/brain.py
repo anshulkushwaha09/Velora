@@ -211,16 +211,16 @@ Topic: {topic}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📊 ELITE v10.0 RETENTION OBJECTIVE:
-Create a "FAST-PACED" documentary (30–40s) using the "Retention Loop" method.
+Create a "FAST-PACED" documentary (30–35s) using the "Retention Loop" method.
 Target: 85%+ audience retention.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 📏 STRICT TIMING RULES:
-- Total Duration: 30–40 seconds ONLY
+- Total Duration: 30–35 seconds ONLY (Target 33s)
 - Total Scenes: 11 ONLY
-- Each Scene: 2.8 – 3.5 seconds
-- voiceover_text: 8–10 words (Must be phonetic Hinglish — fast but clear)
-- caption_text: 6–10 words (Full sentence, NOT just keywords)
+- Each Scene: 2.8 – 3.2 seconds
+- voiceover_text: 6–8 words (STRICT Hinglish — must be fast and punchy)
+- caption_text: 6–10 words (Fast-moving full sentences)
 
 ━━━━━━━━━━━━━━━━━━━━━━
 🧠 NARRATIVE ANATOMY (Elite v10.0):
