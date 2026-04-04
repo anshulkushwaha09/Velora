@@ -307,7 +307,6 @@ Return ONLY the JSON array. No explanation. No preamble.
                 f"#Educational #Viral #FunFacts #Amazing #LearnSomethingNew"
             )
 
-# everything is pushed on github
 # --- TESTING THE MODULE ---
 if __name__ == "__main__":
     brain = ContentBrain()
