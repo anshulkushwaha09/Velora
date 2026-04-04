@@ -200,64 +200,42 @@ class ContentBrain:
 
     def generate_script(self, topic):
         """
-        Generates a MASTER ELITE Hinglish script with VIRAL retention rules (Elite v10.0).
-        Enforces: 30–40s total, 11 scenes, shock hooks, and full-sentence captions.
+        Generates an ELITE v11.0 viral script with HIGH-RETENTION rules.
+        Enforces: Hook (no questions), Continuous Hinglish Flow, Emotional Triggers, and Loop Ending.
         """
-        print(f"📝 Writing ELITE v10.0 MASTER script for: {topic}...")
+        print(f"📝 Writing ELITE v11.0 VIRAL script for: {topic}...")
         prompt = f"""
-You are an ELITE viral YouTube Shorts script generator optimized for MAXIMUM RETENTION and REALISTIC STOCK FOOTAGE.
+You are an elite YouTube Shorts scriptwriter specializing in HIGH-RETENTION Indian mythology, mystery, and hidden history content.
 
 Topic: {topic}
 
-━━━━━━━━━━━━━━━━━━━━━━
-📊 ELITE v10.0 RETENTION OBJECTIVE:
-Create a "FAST-PACED" documentary (30–35s) using the "Retention Loop" method.
-Target: 85%+ audience retention.
+🎯 CORE RULES:
+1. HOOK (0–2 sec): Start with a bold, shocking statement. Absolutely NO questions. Must trigger curiosity or pride instantly.
+2. CONTINUOUS STORY FLOW: Entire voiceover must be ONE smooth flowing paragraph. Use natural Hinglish connectors ("aur", "lekin", "phir", "shayad").
+3. PAYOFF RULE (MANDATORY): You MUST explicitly reveal the name of the city, temple, or mystery. No vague placeholders.
+4. SNAP-CAPTION STYLE (v11.3): You MUST generate 10–12 short segments.
+   - voiceover_text: 6–8 words MAX per segment.
+   - caption_text: 6–10 words MAX per segment.
+   - **HIGHLIGHTING**: Wrap 1-2 "Power Words" in `**double asterisks**` (Yellow). Keep others plain (White).
+   - *Example*: "The secret of **ANCIENT CITIES** was finally found."
+5. LANGUAGE STYLE: Use conversational Hinglish (Hindi + simple English). Avoid robotic tone.
+6. LENGTH: 30–35 seconds ONLY (Target 32s). Keep it extremely tight.
+7. LOOP ENDING: Ending must connect back to the beginning to make it feel like a cycle.
 
-━━━━━━━━━━━━━━━━━━━━━━
-📏 STRICT TIMING RULES:
-- Total Duration: 30–35 seconds ONLY (Target 33s)
-- Total Scenes: 11 ONLY
-- Each Scene: 2.8 – 3.2 seconds
-- voiceover_text: 6–8 words (STRICT Hinglish — must be fast and punchy)
-- caption_text: 6–10 words (Fast-moving full sentences)
+Structure: Hook → Curiosity → Insight (MANDATORY REVEAL) → Twist → Loop Ending (Staccato 10–12 scenes).
 
-━━━━━━━━━━━━━━━━━━━━━━
-🧠 NARRATIVE ANATOMY (Elite v10.0):
-1. Scene 1 → THE SHOCK HOOK. Absolutely NO questions. Start with a reality-shattering claim.
-   ❌ BAD: "Kya aapne Taj Mahal ke raaz sune hain?"
-   ✅ GOOD: "Taj Mahal ke neeche 22 kamre aaj bhi band hain."
-2. Scene 2 → THE PROOF. Instant visual fact to back up the claim.
-3. Scene 3-4 → THE JOURNEY. Connect the dots with "Aur iske peeche ka sach..."
-4. Scene 5-7 → THE TWIST / OPEN LOOP. "Lekin sabse strange baat yeh hai..."
-5. Scene 8-9 → THE IMPLICATION. Why this matters.
-6. Scene 10-11 → THE SATISFYING PAYOFF & LOOP. End on a high note that makes them re-watch.
+🎬 VISUAL DIRECTIONS:
+Provide 2 cinematic visual prompts per segment (10–12 segments total).
+Must feel: Indian, Mythological, Cinematic.
 
-━━━━━━━━━━━━━━━━━━━━━━
-🎭 LANGUAGE & VISUAL POP:
-- Voiceover: Phonetic Hinglish (Roman Hindi + English mix).
-- **HIGHLIGHTS**: Use `**double asterisks**` in `caption_text` for 2-3 power words per scene.
-- Formatting: "Scientists were **STUNNED** by this discovery."
-
-━━━━━━━━━━━━━━━━━━━━━━
-🎬 VISUAL SEARCH & STYLE:
-Use ONLY realistic stock keywords.
-Each scene MUST include:
-- "visual_search_1": broad stock keyword (e.g., "ancient temple")
-- "visual_search_2": specific backup keyword (e.g., "monument aerial")
-- "visual_style": zoom in / out / fast
-
-⚠️ DO NOT use generic AI words like: mystery, secret, ancient (unless in the niche). Be SPECIFIC.
-
-━━━━━━━━━━━━━━━━━━━━━━
 📦 OUTPUT FORMAT (STRICT JSON — return ONLY this):
 [
   {{
     "id": 1,
-    "voiceover_text": "Shocking delivery text in phonetic Hinglish...",
-    "caption_text": "Full sentence with **DYNAMIC HIGHLIGHTS**...",
-    "visual_search_1": "simple stock keyword",
-    "visual_search_2": "backup keyword",
+    "voiceover_text": "Chunk of the continuous story...",
+    "caption_text": "Dynamic caption with **HIGHLIGHTS**...",
+    "visual_search_1": "cinematic stock keyword",
+    "visual_search_2": "specific backup keyword 2",
     "visual_style": "zoom in / out / fast"
   }}
 ]

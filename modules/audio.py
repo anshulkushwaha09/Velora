@@ -22,13 +22,28 @@ class AudioEngine:
         clean_text = re.sub(r'\[.*?\]', '', text)  # Removes [WHOOSH], [SOUND]
         clean_text = re.sub(r'\(.*?\)', '', clean_text) # Removes (pause)
         clean_text = re.sub(r'\*', '', clean_text) # Removes **bolding** for TTS
-        # 2. Final cleanup of extra whitespace
+        # 2. Phonetic Fixes for common Hinglish mispronunciations
+        PHONETIC_FIXES = {
+            "Bharat": "Bhaarat",
+            "bharat": "bhaarat",
+            "Shiv ": "Shiva ",  # Space ensures it's not part of another word
+            "shiv ": "shiva ",
+            "Astra": "Ustra",   # Better vowel sound for neural voice
+            "astra": "ustra",
+            "vidya": "vid-ya",
+            "Vedic": "Vay-dik",
+            "vedic": "vay-dik"
+        }
+        for word, replacement in PHONETIC_FIXES.items():
+            clean_text = clean_text.replace(word, replacement)
+
+        # 3. Final cleanup of extra whitespace
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
 
         for attempt in range(retries):
             try:
-                # Elite v10.0 Sync: Pitch -10Hz, Rate +26% (Deep, Authoritative & Snappy)
-                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+26%", pitch="-10Hz")
+                # Elite v11.0 Sync: Pitch -10Hz, Rate +30% (Ultra-Paced, Authoritative & Snappy)
+                communicate = edge_tts.Communicate(clean_text, self.voice, rate="+30%", pitch="-10Hz")
                 await communicate.save(output_path)
                 
                 # Verify file existence and size

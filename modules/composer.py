@@ -22,8 +22,8 @@ DEPTH_LAYERS = 5
 # Font size (px). Elite v10.0 uses larger, bolder text for impact.
 FONT_SIZE = 72
 
-# Maximum characters per wrapped line. Keep enough margin so long words fit.
-MAX_CHARS_PER_LINE = 24
+# Maximum characters per wrapped line (Elite v11.3 Context Captions)
+MAX_CHARS_PER_LINE = 22
 
 # Vertical gap between caption lines (pixels)
 LINE_SPACING = 14

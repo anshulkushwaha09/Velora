@@ -172,3 +172,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     asyncio.run(main(dry_run=args.dry_run, script_path=args.script))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="AI YouTube Shorts Generator")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Generate the video locally without uploading to YouTube."
+    )
+    parser.add_argument(
+        "--script",
+        type=str,
+        default=None,
+        help="Path to an optional local script.json file to use instead of generating a new one."
+    )
+    args = parser.parse_args()
+
+    asyncio.run(main(dry_run=args.dry_run, script_path=args.script))
