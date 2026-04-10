@@ -35,13 +35,13 @@ def _initialize_clients():
 
 clients = _initialize_clients()
 
-# Model fallback chain (Updated for April 2026)
+# Model fallback chain - using models verified as available in this environment
 FALLBACK_MODELS = [
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
+    "gemini-2.0-flash",      # Standard 2.0
+    "gemini-2.0-flash-lite", # Lightweight 2.0
+    "gemini-2.5-flash",      # Next-gen Flash
+    "gemini-2.5-flash-lite", # Next-gen Flash Lite
+    "gemini-2.5-pro",       # Next-gen Pro (high quality)
 ]
 
 def _call_with_fallback(prompt: str) -> str:
@@ -64,9 +64,10 @@ def _call_with_fallback(prompt: str) -> str:
             except Exception as e:
                 err_str = str(e)
                 if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                    print(f"      ⚠️ Quota hit on {model} (Key #{i+1})")
-                elif "400" in err_str or "INVALID_ARGUMENT" in err_str:
-                    print(f"      ⚠️ Invalid Argument on {model} (Key #{i+1}) - Skipping...")
+                    print(f"      ⚠️ Quota hit on {model} (Key #{i+1}). Waiting 2s...")
+                    time.sleep(2) # Small delay to avoid rapid-fire quota burning
+                elif "404" in err_str or "not found" in err_str.lower() or "503" in err_str:
+                    print(f"      ⚠️ Model {model} unavailable or overloaded.")
                 else:
                     print(f"      ⚠️ Error on {model}: {e}")
                 last_error = e
@@ -119,6 +120,26 @@ class ContentBrain:
             "hook": "ATOMIC WAR CLAIM (Ancient warfare reframed)",
             "focus": "Mahabharata and Ramayana battles retold with modern military framing — weapons, strategy, and scale that rivals any modern war.",
             "keywords": "Brahmastra, Divyastra, war, ancient weapon, celestial army"
+        },
+        "PSYCHOLOGICAL_MIRROR": {
+            "hook": "PERSONALIZED CLAIM (Why this matters to YOU)",
+            "focus": "Connecting ancient Vedic psychology, birth nakshatras, or karma theory to the viewer's current life struggles and personality.",
+            "keywords": "personalized, karma, identity, subconscious, ancient psychology"
+        },
+        "GLITCH_IN_HISTORY": {
+            "hook": "OUT-OF-PLACE ARTIFACT (The glitch in the timeline)",
+            "focus": "Ooparts (Out-of-place artifacts) found in India — ancient batteries, rockets, or surgical tools that shouldn't exist.",
+            "keywords": "glitch, oopart, impossible artifact, anomaly, forbidden archeology"
+        },
+        "THE_VOID_EXPERIMENT": {
+            "hook": "EXISTENTIAL CLAIM (Simulation vs Reality)",
+            "focus": "The physics of 'Maya', ancient meditation experiments, and sound frequencies that can manipulate physical reality.",
+            "keywords": "simulation, frequency, maya, vibration, consciousness"
+        },
+        "BANNED_GEOGRAPHY": {
+            "hook": "RESTRICTED ACCESS CLAIM (Why is this pixelated?)",
+            "focus": "Hidden portals, satellite-pixelated temples, and underground cities in the Himalayas that governments keep secret.",
+            "keywords": "restricted, classified, hidden portal, underground city, secret map"
         }
     }
 
@@ -133,7 +154,12 @@ class ContentBrain:
         "Ancient Indian Weapons & Warfare",
         "Vedic Astrology & Cosmic Science",
         "Cursed Places & Paranormal India",
-        "Ancient Indian Scientists & Inventions"
+        "Ancient Indian Scientists & Inventions",
+        "Restricted Archaeological Sites",
+        "Vedic Psychology & Mind Control",
+        "Forbidden Manuscripts",
+        "Lost DNA Secrets",
+        "Ancient Bio-Weaponry"
     ]
 
     HISTORY_FILE = "topic_history.json"
@@ -221,8 +247,10 @@ Topic: {topic}
 5. LANGUAGE STYLE: Use conversational Hinglish (Hindi + simple English). Avoid robotic tone.
 6. LENGTH: 30–35 seconds ONLY (Target 32s). Keep it extremely tight.
 7. LOOP ENDING: Ending must connect back to the beginning to make it feel like a cycle.
+8. COMMENT BAIT (ELITE RULE): The final scene MUST include a polarizing or curious question to trigger comments. 
+   - *Example*: "Do you think this technology was stolen, or buried on purpose? Tell me below." or "Comment 'SHIVA' if you want the exact coordinates."
 
-Structure: Hook → Curiosity → Insight (MANDATORY REVEAL) → Twist → Loop Ending (Staccato 10–12 scenes).
+Structure: Hook (Pattern Interrupt) → Curiosity → Insight (MANDATORY REVEAL) → Twist → Comment Bait → Loop Ending.
 
 🎬 VISUAL DIRECTIONS:
 Provide 2 cinematic visual prompts per segment (10–12 segments total).
