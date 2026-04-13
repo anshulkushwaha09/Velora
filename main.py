@@ -148,7 +148,7 @@ async def main(dry_run: bool = False, script_path: str = None):
     else:
         try:
             from modules.youtube_uploader import upload_video
-            video_title       = f"Did You Know? | {topic[:60]} #Shorts"
+            video_title       = f"{brain.generate_title(topic)} #Shorts"
             video_description = brain.generate_description(topic, script)
             upload_video(final_video_path, title=video_title, description=video_description)
         except Exception as e:
