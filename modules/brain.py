@@ -285,6 +285,33 @@ Return ONLY the JSON array. No explanation. No preamble.
                     pass
             return None
 
+    def generate_title(self, topic: str) -> str:
+        """
+        Generates a viral, curiosity-driven YouTube Shorts title.
+        """
+        print(f"🎬 Generating viral title for: {topic}...")
+        prompt = (
+            f"You are a viral YouTube Shorts growth expert.\n"
+            f"Topic: \"{topic}\"\n\n"
+            f"🎯 YOUR TASK: Create ONE high-engagement, curiosity-driven title for a YouTube Short.\n"
+            f"RULES:\n"
+            f"1. LENGTH: Under 75 characters (so we can add #Shorts after).\n"
+            f"2. FORMAT: No markdown bolding (**). No quotes around the title.\n"
+            f"3. HOOK: Start with a power word or a shocking claim. Use curiosity gaps.\n"
+            f"4. EMOJIS: Include 1-2 relevant emojis for visual pop.\n"
+            f"5. No #Shorts: Do NOT include the hashtag in the title itself.\n"
+            f"Return ONLY the title string. No explanation."
+        )
+
+        try:
+            title = _call_with_fallback(prompt)
+            # Cleanup any unwanted characters
+            title = title.replace('"', '').replace('**', '').strip()
+            return title
+        except Exception as e:
+            print(f"   ⚠️ Title generation failed ({e}), using safe fallback.")
+            return topic[:60]
+
     def generate_description(self, topic: str, script_data: list) -> str:
         """
         Generates a unique, dynamic YouTube description for each Short.
