@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 from google import genai
 from dotenv import load_dotenv
+from modules.viral_engine import apply_trend_pattern, get_best_style
 
 # Load environment variables
 load_dotenv()
@@ -184,6 +185,7 @@ class ContentBrain:
     def get_trending_topic(self):
         """
         Rotates through Styles sequentially for perfect channel balance.
+        UPGRADED: Applies viral trend patterns for curiosity-framed topics.
         """
         history   = self._load_history()
         style_keys = list(self.NARRATIVE_STYLES.keys())
@@ -215,8 +217,12 @@ class ContentBrain:
             f"Return ONLY the topic string (max 15 words)."
         )
 
-        topic = _call_with_fallback(prompt)
-        print(f"🎯 Style: {style_key} | Topic: {topic}")
+        raw_topic = _call_with_fallback(prompt)
+
+        # ── PART 4: SMART TOPIC ENGINE ────────────────────────────────────
+        # Wrap the raw Gemini topic in a curiosity-maximizing trend pattern
+        topic = apply_trend_pattern(raw_topic)
+        print(f"🎯 Style: {style_key} | Raw: {raw_topic} | Final: {topic}")
 
         # Save to history & return with niche
         history.append(f"[{style_key}] [{current_niche}] {topic}")
@@ -224,19 +230,67 @@ class ContentBrain:
 
         return topic, current_niche
 
-    def generate_script(self, topic):
+    # ── PART 1: STYLE DEFINITIONS ──────────────────────────────────────
+    # Each style modifies hook tone, narrative pacing, and curiosity density.
+    SCRIPT_STYLES = {
+        "default": {
+            "hook_directive": "Start with a bold, shocking statement. Absolutely NO questions. Must trigger curiosity or pride instantly.",
+            "pacing_directive": "Maintain steady tension throughout. Each segment builds on the last.",
+            "curiosity_directive": "Add 1 curiosity trigger every 2–3 segments.",
+        },
+        "curiosity": {
+            "hook_directive": "Start with an IMPOSSIBLE-sounding fact that makes the viewer think 'wait, WHAT?'. Use phrases like 'Yeh jagah exist karti hai...' or 'Ek aisi cheez hai jo science explain nahi kar sakti'.",
+            "pacing_directive": "Slow-build. Each segment must add ONE new mystery layer. Delay the reveal until segment 8–9. Viewer must feel like they're going deeper into a rabbit hole.",
+            "curiosity_directive": "Every 2 segments MUST introduce a new unanswered question. Stack curiosity like layers — never resolve one mystery without opening another.",
+        },
+        "shock": {
+            "hook_directive": "Hit HARD in the first 2 seconds with an outrageous claim: 'Yeh 5000 saal pehle BAN kiya gaya tha' or 'NASA ne ise classify kiya hai'. The viewer must feel URGENCY.",
+            "pacing_directive": "RAPID-FIRE pacing. Short punchy sentences. No breathing room. Every segment is a mini-explosion of information.",
+            "curiosity_directive": "Use SHOCK markers every segment: 'aur sabse scary baat', 'lekin yeh toh kuch nahi', 'asli shock abhi aayega'. Keep adrenaline HIGH.",
+        },
+        "story": {
+            "hook_directive": "Start with a character or event: 'Ek raja tha jisne...' or '1947 mein ek archaeologist ne...' — pull them into a NARRATIVE, not a fact dump.",
+            "pacing_directive": "Classic story arc: setup → rising tension → climax → twist. Make the viewer FEEL like they're watching a movie trailer. Use emotional beats.",
+            "curiosity_directive": "Plant 1 'mystery seed' in the setup, water it through the middle, and reveal it at the climax. Ending must reframe the entire story.",
+        },
+        # v3.0: New styles for trend fusion, controversy, and seasonal pillars
+        "trend_fusion": {
+            "hook_directive": "Start by referencing a CURRENT world event or trend, then IMMEDIATELY connect it to ancient India: 'Aaj NASA ne jo discover kiya... woh 5000 saal pehle Vedas mein likha tha'. Make it feel like ancient India PREDICTED modern discoveries.",
+            "pacing_directive": "Alternate between modern trend facts and ancient parallels. Create a ping-pong effect: modern -> ancient -> modern -> ancient. Build toward the revelation that ancients ALREADY KNEW.",
+            "curiosity_directive": "Stack 'HOW DID THEY KNOW?' moments. Every comparison must make the viewer question the timeline of knowledge. End with an open question about what else ancients predicted.",
+        },
+        "controversy": {
+            "hook_directive": "Present a DIVISIVE claim: 'Science says X, but ancient texts say Y - aur proof DONO ke paas hai'. The viewer must feel compelled to PICK A SIDE.",
+            "pacing_directive": "Debate-style pacing: present one side -> counter-argument -> escalate -> present shocking evidence -> leave it unresolved. Viewer must feel the TENSION between two worldviews.",
+            "curiosity_directive": "Use polarizing language: 'believers say...', 'scientists disagree...', 'but NOBODY can explain this one fact'. Every segment must deepen the divide.",
+        },
+        "seasonal": {
+            "hook_directive": "Start with something EVERYONE knows about the festival/event, then IMMEDIATELY subvert it: 'Har saal Diwali manate ho... par ASLI reason koi nahi jaanta'. Make the familiar feel UNFAMILIAR.",
+            "pacing_directive": "Start with the widely known narrative, then peel back layers of hidden meaning. Each segment reveals a deeper, more surprising layer. Climax should be a 'WHAT?! I never knew this' moment.",
+            "curiosity_directive": "Use 'you thought you knew' triggers: 'actually...', 'asli raaz yeh hai ki...', 'par textbooks mein yeh nahi padhate'. Make common knowledge feel incomplete.",
+        },
+    }
+
+    def generate_script(self, topic, style: str = "default"):
         """
-        Generates an ELITE v11.0 viral script with HIGH-RETENTION rules.
-        Enforces: Hook (no questions), Continuous Hinglish Flow, Emotional Triggers, and Loop Ending.
+        Generates an ELITE v12.0 viral script with HIGH-RETENTION rules.
+        UPGRADED: Accepts 'style' parameter (curiosity/shock/story/default)
+        to vary hook tone, pacing, and curiosity density.
+        Enforces: Visual Intelligence (camera motion + lighting + realism),
+        no static/text-only/cartoon visuals.
         """
-        print(f"📝 Writing ELITE v11.0 VIRAL script for: {topic}...")
+        # Resolve style config (fall back to default for unknown styles)
+        style_cfg = self.SCRIPT_STYLES.get(style, self.SCRIPT_STYLES["default"])
+
+        print(f"📝 Writing ELITE v12.0 VIRAL script for: {topic} [style={style}]...")
         prompt = f"""
 You are an elite YouTube Shorts scriptwriter specializing in HIGH-RETENTION Indian mythology, mystery, and hidden history content.
 
 Topic: {topic}
+Style: {style.upper()}
 
 🎯 CORE RULES:
-1. HOOK (0–2 sec): Start with a bold, shocking statement. Absolutely NO questions. Must trigger curiosity or pride instantly.
+1. HOOK (0–2 sec): {style_cfg['hook_directive']}
 2. CONTINUOUS STORY FLOW: Entire voiceover must be ONE smooth flowing paragraph. Use natural Hinglish connectors ("aur", "lekin", "phir", "shayad").
 3. PAYOFF RULE (MANDATORY): You MUST explicitly reveal the name of the city, temple, or mystery. No vague placeholders.
 4. SNAP-CAPTION STYLE (v11.3): You MUST generate 10–12 short segments.
@@ -244,17 +298,40 @@ Topic: {topic}
    - caption_text: 6–10 words MAX per segment.
    - **HIGHLIGHTING**: Wrap 1-2 "Power Words" in `**double asterisks**` (Yellow). Keep others plain (White).
    - *Example*: "The secret of **ANCIENT CITIES** was finally found."
-5. LANGUAGE STYLE: Use conversational Hinglish (Hindi + simple English). Avoid robotic tone.
+5. LANGUAGE STYLE: Use conversational Hinglish (Hindi + simple English). Avoid robotic tone. Avoid repeating words like "ancient", "hidden", "mysterious" more than once.
 6. LENGTH: 30–35 seconds ONLY (Target 32s). Keep it extremely tight.
 7. LOOP ENDING: Ending must connect back to the beginning to make it feel like a cycle.
-8. COMMENT BAIT (ELITE RULE): The final scene MUST include a polarizing or curious question to trigger comments. 
-   - *Example*: "Do you think this technology was stolen, or buried on purpose? Tell me below." or "Comment 'SHIVA' if you want the exact coordinates."
+8. COMMENT BAIT (ELITE RULE): The final scene MUST include a polarizing or curious question to trigger comments.
+
+🧠 PACING RULES (STYLE-SPECIFIC):
+- Pacing: {style_cfg['pacing_directive']}
+- Curiosity: {style_cfg['curiosity_directive']}
+
+🧠 ANTI-PATTERN RULES (CRITICAL):
+- Hook must NOT be a question. Use statements, claims, or revelations.
+- Every 2–3 segments must add NEW curiosity (not repeat old info).
+- Include 1 mid-video twist that reframes what came before.
+- Use Hinglish naturally — don't force it. Mix organically.
+- Avoid repetitive filler words: "ancient", "hidden", "secret" (use max once each).
+- Reveal actual place/event name clearly. No vagueness.
+- Ending must loop to the beginning.
+- Final line must trigger comments.
+- Viewer curiosity must INCREASE every 3 seconds.
 
 Structure: Hook (Pattern Interrupt) → Curiosity → Insight (MANDATORY REVEAL) → Twist → Comment Bait → Loop Ending.
 
-🎬 VISUAL DIRECTIONS:
+🎬 VISUAL DIRECTIONS (CRITICAL — CINEMATIC QUALITY):
 Provide 2 cinematic visual prompts per segment (10–12 segments total).
-Must feel: Indian, Mythological, Cinematic.
+
+⚠️ VISUAL RULES (MANDATORY):
+- Every visual MUST include camera motion (dolly, pan, zoom, tracking shot, drone, handheld)
+- Every visual MUST include lighting description (torch light, golden hour, moonlit, dramatic shadows, cinematic fog)
+- Every visual MUST feel photorealistic and cinematic
+- BANNED: static visuals, text-only scenes, cartoon/anime style, stock photo feel
+- Examples of GOOD visuals:
+  "camera slowly moving inside ancient temple corridor, torch light flickering, dust particles in air"
+  "aerial drone shot of misty Himalayan valley at dawn, golden light cutting through fog"
+  "handheld camera POV walking through dark underground tunnel, flashlight beam scanning walls"
 
 📦 OUTPUT FORMAT (STRICT JSON — return ONLY this):
 [
@@ -262,9 +339,9 @@ Must feel: Indian, Mythological, Cinematic.
     "id": 1,
     "voiceover_text": "Chunk of the continuous story...",
     "caption_text": "Dynamic caption with **HIGHLIGHTS**...",
-    "visual_search_1": "cinematic stock keyword",
-    "visual_search_2": "specific backup keyword 2",
-    "visual_style": "zoom in / out / fast"
+    "visual_search_1": "cinematic visual with camera motion and lighting",
+    "visual_search_2": "backup cinematic visual with different angle",
+    "visual_style": "zoom in / out / fast / slow pan"
   }}
 ]
 
@@ -274,16 +351,63 @@ Return ONLY the JSON array. No explanation. No preamble.
         clean_text = raw_text.replace('```json', '').replace('```', '').strip()
 
         try:
-            return json.loads(clean_text)
+            script = json.loads(clean_text)
+            # Tag the script with its generation style for performance tracking
+            if isinstance(script, list) and script:
+                script[0]["_generation_style"] = style
+            return script
         except json.JSONDecodeError as e:
             print(f"❌ JSON Error: {e}. Attempting recovery...")
             match = re.search(r'\[.*\]', clean_text, re.DOTALL)
             if match:
                 try:
-                    return json.loads(match.group())
+                    recovered = json.loads(match.group())
+                    if isinstance(recovered, list) and recovered:
+                        recovered[0]["_generation_style"] = style
+                    return recovered
                 except:
                     pass
             return None
+
+    def generate_multiple_scripts(self, topic: str, pillar: str = "evergreen") -> list:
+        """
+        v3.0: Generates 3 script variants with style selection based on content pillar.
+        
+        Pillar-to-style mapping:
+          evergreen    -> curiosity, shock, story
+          trend_fusion -> trend_fusion, curiosity, controversy
+          seasonal     -> seasonal, curiosity, story
+          experimental -> shock, controversy, curiosity
+        """
+        # Style subsets per pillar — each produces 3 variants
+        pillar_styles = {
+            "evergreen":    ["curiosity", "shock", "story"],
+            "trend_fusion": ["trend_fusion", "curiosity", "controversy"],
+            "seasonal":     ["seasonal", "curiosity", "story"],
+            "experimental": ["shock", "controversy", "curiosity"],
+        }
+        styles = pillar_styles.get(pillar, pillar_styles["evergreen"])
+
+        print(f"\nGenerating 3 script variants for: {topic} [pillar={pillar}]")
+        print(f"   Styles: {styles}")
+
+        scripts = []
+        for style in styles:
+            script = self.generate_script(topic, style=style)
+            if script:
+                scripts.append(script)
+                print(f"   [{style.upper()}] variant generated ({len(script)} segments)")
+            else:
+                print(f"   [{style.upper()}] variant failed, skipping")
+
+        if not scripts:
+            print("   All styled variants failed. Trying default...")
+            fallback = self.generate_script(topic, style="default")
+            if fallback:
+                scripts.append(fallback)
+
+        print(f"   {len(scripts)} variants ready for scoring\n")
+        return scripts
 
     def generate_title(self, topic: str) -> str:
         """
@@ -364,15 +488,23 @@ Return ONLY the JSON array. No explanation. No preamble.
 
 # --- TESTING THE MODULE ---
 if __name__ == "__main__":
+    from modules.viral_engine import score_script, pick_best_script
+
     brain = ContentBrain()
     topic, niche = brain.get_trending_topic()
-    script = brain.generate_script(topic)
-    desc   = brain.generate_description(topic, script)
-    print("\n📋 Description preview:\n")
-    print(desc)
 
-    test_output = os.path.join(os.getcwd(), "assets", "temp", "script_test.json")
-    os.makedirs(os.path.dirname(test_output), exist_ok=True)
-    with open(test_output, "w", encoding="utf-8") as f:
-        json.dump({"topic": topic, "script": script}, f, indent=4, ensure_ascii=False)
-        print(f"\n✅ Test script saved to {test_output}")
+    # Test multi-script generation + scoring
+    scripts = brain.generate_multiple_scripts(topic)
+    if scripts:
+        best = pick_best_script(scripts)
+        desc = brain.generate_description(topic, best)
+        print("\n📋 Description preview:\n")
+        print(desc)
+
+        test_output = os.path.join(os.getcwd(), "assets", "temp", "script_test.json")
+        os.makedirs(os.path.dirname(test_output), exist_ok=True)
+        with open(test_output, "w", encoding="utf-8") as f:
+            json.dump({"topic": topic, "scripts": len(scripts), "best_script": best}, f, indent=4, ensure_ascii=False)
+            print(f"\n✅ Test script saved to {test_output}")
+    else:
+        print("❌ No scripts generated.")

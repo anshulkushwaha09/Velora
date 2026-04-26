@@ -1,20 +1,18 @@
-name: Thrice-Daily YouTube Shorts
+name: Twice-Daily YouTube Shorts (v3.0)
 
 on:
   schedule:
-    # ── Run 1:  8:00 AM IST = 02:30 UTC  (morning browse) ──
-    - cron: "30 2 * * *"
-    # ── Run 2: 12:00 PM IST = 06:30 UTC  (lunch-time peak) ──
-    - cron: "30 6 * * *"
-    # ── Run 3:  7:00 PM IST = 13:30 UTC  (evening peak) ──
+    # ── Run 1:  6:00 AM IST = 00:30 UTC  (morning scroll) ──
+    - cron: "30 0 * * *"
+    # ── Run 2:  7:00 PM IST = 13:30 UTC  (evening prime time) ──
     - cron: "30 13 * * *"
   workflow_dispatch:
-    # Also allows manual trigger from GitHub → Actions tab
+    # Manual trigger from GitHub → Actions tab
 
 jobs:
   generate-and-upload:
     runs-on: ubuntu-latest
-    timeout-minutes: 45 # Increased to handle FFmpeg render time
+    timeout-minutes: 45
 
     steps:
       # ── Step 1: Checkout code ───────────────────────────────────────────────
@@ -39,7 +37,7 @@ jobs:
         run: pip install -r requirements.txt
 
       # ── Step 5: Restore topic history (prevents duplicate shorts) ────────────
-      # topic_history.json remembers the last 30 topics used — cached across runs
+      # topic_history.json remembers the last 200 topics used
       - name: Restore topic history cache
         uses: actions/cache@v4
         with:
@@ -48,7 +46,34 @@ jobs:
           restore-keys: |
             topic-history-
 
-      # ── Step 6: Create .env from GitHub Secrets ──────────────────────────────
+      # ── Step 6: Restore topic bank (v3.0 — persistent angle/cooldown state) ──
+      - name: Restore topic bank cache
+        uses: actions/cache@v4
+        with:
+          path: topic_bank.json
+          key: topic-bank-${{ github.run_id }}
+          restore-keys: |
+            topic-bank-
+
+      # ── Step 7: Restore trend cache (6-hour TTL, saves RSS calls) ────────────
+      - name: Restore trend cache
+        uses: actions/cache@v4
+        with:
+          path: trend_cache.json
+          key: trend-cache-${{ github.run_id }}
+          restore-keys: |
+            trend-cache-
+
+      # ── Step 8: Restore performance log (self-learning memory) ───────────────
+      - name: Restore performance log
+        uses: actions/cache@v4
+        with:
+          path: performance_log.json
+          key: perf-log-${{ github.run_id }}
+          restore-keys: |
+            perf-log-
+
+      # ── Step 9: Create .env from GitHub Secrets ──────────────────────────────
       - name: Write environment variables
         run: |
           echo "GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }}" >> .env
@@ -74,17 +99,17 @@ jobs:
           echo "PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}" >> .env
           echo "PIXABAY_API_KEY=${{ secrets.PIXABAY_API_KEY }}" >> .env
 
-      # ── Step 7: Restore token.pickle & client_secret.json from Secrets ────────
+      # ── Step 10: Restore YouTube credentials from Secrets ────────────────────
       - name: Restore YouTube credentials
         run: |
           echo "${{ secrets.YOUTUBE_TOKEN_B64 }}" | base64 --decode > token.pickle
           echo "${{ secrets.YOUTUBE_CLIENT_SECRET_B64 }}" | base64 --decode > client_secret.json
 
-      # ── Step 8: Run the bot ───────────────────────────────────────────────────
+      # ── Step 11: Generate and upload one YouTube Short ───────────────────────
       - name: Generate and upload YouTube Short
         run: python main.py
 
-      # ── Step 9: Upload final video as artifact (debugging / archive) ──────────
+      # ── Step 12: Archive final video as artifact (debugging / backup) ────────
       - name: Archive generated video
         if: always()
         uses: actions/upload-artifact@v4
