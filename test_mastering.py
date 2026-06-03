@@ -27,7 +27,7 @@ async def test():
     duration = composer.get_duration(audio_path)
     print(f"Audio Duration: {duration}s")
 
-    # 3. Test .ass Generation
+    # 3. Test .ass Generations
     ass_path = composer._generate_ass_subtitles(scene['caption_text'], duration, "test")
     with open(ass_path, "r", encoding="utf-8") as f:
         ass_content = f.read()
