@@ -18,7 +18,7 @@ async def test():
         print("Failed to generate script")
         return
 
-    # Look for a scene with stars
+    # Look for a scene with star
     scene = script[0]
     print(f"Scene 0 Text: {scene['caption_text']}")
     
