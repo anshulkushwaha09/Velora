@@ -18,7 +18,7 @@
 - **Pro Transitions:** Randomly applies `xfade` (fade, slide, wipes) between scenes.
 - **Silence Removal:** Automatically trims dead air from AI voice generation.
 
-- **🤖 Random Avatar Injection:** Automatically inserts a custom "Avatar/Mascot" video into a random middle scene to build channel brand identity.
+- **🤖 Random Avatar Injection:** Automatically insert a custom "Avatar/Mascot" video into a random middle scene to build channel brand identity.
 - **🪟 Windows Ready:** Includes specific FFmpeg flags (`yuv420p`, `faststart`) to prevent corruption errors (`0x80004005`) on Windows Media Player.
 
 ---
